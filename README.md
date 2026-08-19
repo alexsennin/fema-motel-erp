@@ -18,11 +18,14 @@ npm install
 npm run typecheck
 npm run build
 npx clasp login
-npx clasp create-script --title "FEMA · Web App" --parentId "1bbQdeYSPdJayzWU9ViLSgHhFD5uIFxvFiQmYWOULaDg" --rootDir dist
+npx clasp create-script --type standalone --title "FEMA · Apps Script" --rootDir dist
 npm run clasp:push
 ```
 
-`clasp create-script` crea `.clasp.json`. Ese archivo y `~/.clasprc.json` contienen identificadores o credenciales y no se versionan.
+El proyecto independiente de Apps Script vive dentro de la carpeta `FEMA` en
+Google Drive y abre la fuente maestra mediante su ID. `clasp create-script`
+crea `.clasp.json`; ese archivo y `~/.clasprc.json` contienen identificadores o
+credenciales y no se versionan.
 
 ## Despliegue desde GitHub
 

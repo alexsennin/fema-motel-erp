@@ -1,7 +1,8 @@
 node_modules/
 dist/
 coverage/
-.clasp.json
+.clasp*.json
+!.clasp.example.json
 .clasprc.json
 .env
 .env.*
@@ -9,4 +10,3 @@ coverage/
 work/
 outputs/
 .DS_Store
-
