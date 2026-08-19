@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "none",
+    "lib": ["ES2019"],
+    "types": ["google-apps-script"],
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "outFile": "dist/Code.js",
+    "removeComments": false,
+    "sourceMap": false
+  },
+  "files": [
+    "src/server/00_Config.ts",
+    "src/server/01_Types.ts",
+    "src/server/02_SheetRepository.ts",
+    "src/server/03_Authorization.ts",
+    "src/server/04_RoomService.ts",
+    "src/server/05_WebApp.ts"
+  ]
+}
+

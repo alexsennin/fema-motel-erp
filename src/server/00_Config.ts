@@ -1,0 +1,30 @@
+const FEMA_CONFIG = Object.freeze({
+  spreadsheetId: "1bbQdeYSPdJayzWU9ViLSgHhFD5uIFxvFiQmYWOULaDg",
+  timeZone: "America/Mexico_City",
+  headerRow: 4,
+  dataStartRow: 5,
+  exampleMarker: "EJEMPLO",
+  lockTimeoutMs: 15000,
+  sheets: Object.freeze({
+    users: "Usuarios",
+    roles: "Roles",
+    rolePermissions: "RolPermisos",
+    permissions: "Permisos",
+    motels: "Moteles",
+    roomTypes: "TiposHabitacion",
+    rates: "Tarifas",
+    rooms: "Habitaciones",
+    shifts: "Turnos",
+    cycles: "Ciclos",
+    roomEvents: "EventosHabitacion",
+    stays: "Estancias",
+    stayMovements: "MovimientosEstancia",
+    cleanings: "Limpiezas",
+    maintenance: "Mantenimientos",
+    charges: "Cargos",
+    payments: "Pagos",
+    audit: "Bitacora",
+    sessions: "Sesiones"
+  })
+});
+

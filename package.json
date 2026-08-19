@@ -1,0 +1,18 @@
+{
+  "name": "fema-motel-erp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ERP para motel desarrollado como Web App de Google Apps Script y gestionado con clasp.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "clasp:status": "clasp status",
+    "clasp:push": "npm run build && clasp push",
+    "clasp:deploy": "npm run build && clasp push && clasp create-deployment --description"
+  },
+  "devDependencies": {
+    "@google/clasp": "3.3.0",
+    "@types/google-apps-script": "2.0.12",
+    "typescript": "5.9.3"
+  }
+}
