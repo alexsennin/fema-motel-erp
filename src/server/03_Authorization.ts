@@ -35,13 +35,13 @@ function withScriptLock_<T>(operation: () => T): T {
   }
 }
 
-function writeAudit_(user: FemaUser, action: string, entity: string, entityId: string, before: unknown, after: unknown, reason: string): void {
+function writeAudit_(user: FemaUser, action: string, entity: string, entityId: string, before: unknown, after: unknown, reason: string, module = "HABITACIONES"): void {
   appendRow_(FEMA_CONFIG.sheets.audit, {
     IdBitacora: newId_("BIT"),
     IdMotel: user.idMotel,
     FechaHora: now_(),
     IdUsuario: user.idUsuario,
-    Modulo: "HABITACIONES",
+    Modulo: module,
     Accion: action,
     Entidad: entity,
     IdEntidad: entityId,
@@ -51,4 +51,3 @@ function writeAudit_(user: FemaUser, action: string, entity: string, entityId: s
     IdSesion: "WEBAPP"
   });
 }
-

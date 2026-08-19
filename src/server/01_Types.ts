@@ -29,6 +29,14 @@ interface InitialState {
   rooms: RoomCard[];
 }
 
+interface CatalogMotel { idMotel: string; nombre: string; zonaHoraria: string; activo: boolean; }
+interface CatalogReceptionist { idUsuario: string; idMotel: string; correo: string; nombre: string; apellidos: string; activo: boolean; }
+interface CatalogCleaningStaff { idPersonalLimpieza: string; idMotel: string; nombre: string; apellidos: string; turnoHabitual: string; activo: boolean; }
+interface CatalogState { user: FemaUser; motels: CatalogMotel[]; receptionists: CatalogReceptionist[]; cleaningStaff: CatalogCleaningStaff[]; }
+interface MotelInput { idMotel?: string; nombre: string; zonaHoraria: string; }
+interface ReceptionistInput { idUsuario?: string; idMotel: string; correo: string; nombre: string; apellidos: string; }
+interface CleaningStaffInput { idPersonalLimpieza?: string; idMotel: string; nombre: string; apellidos: string; turnoHabitual: string; }
+
 interface EntryInput {
   idHabitacion: string;
   idTarifa: string;
@@ -46,4 +54,3 @@ interface ApiResponse<T> {
   data?: T;
   error?: { code: string; message: string };
 }
-

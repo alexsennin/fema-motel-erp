@@ -1,70 +1,65 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <base target="_top">
-    <meta charset="utf-8">
-    <style>
-      :root { color-scheme: light; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      body { margin: 0; background: #f4f7fb; color: #172033; }
-      header { background: #1f4e78; color: white; padding: 18px 24px; }
-      header h1 { margin: 0; font-size: 22px; }
-      header p { margin: 5px 0 0; opacity: .8; }
-      main { padding: 24px; }
-      #rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-      .room { background: white; border-radius: 12px; box-shadow: 0 3px 12px rgba(19, 46, 76, .08); padding: 16px; border-left: 7px solid #9aa4b2; }
-      .room h2 { margin: 0 0 4px; font-size: 21px; }
-      .room p { margin: 4px 0; color: #536176; }
-      .room[data-status="DISPONIBLE"] { border-color: #3d8b40; }
-      .room[data-status="OCUPADA"] { border-color: #c62828; }
-      .room[data-status="SUCIA"] { border-color: #f9a825; }
-      .room[data-status="LIMPIEZA"] { border-color: #1565c0; }
-      .room[data-status="MANTENIMIENTO"] { border-color: #424242; }
-      .message { background: white; border-radius: 10px; padding: 18px; }
-      .error { color: #b42318; border: 1px solid #fecdca; background: #fff6f5; }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>FEMA · Habitaciones</h1>
-      <p id="session">Cargando sesión…</p>
-    </header>
-    <main>
-      <div id="rooms"><div class="message">Cargando habitaciones…</div></div>
-    </main>
-    <script>
-      const rooms = document.getElementById("rooms");
-      const session = document.getElementById("session");
-
-      const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (character) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;"
-      })[character]);
-
-      const render = (response) => {
-        if (!response.ok) {
-          rooms.innerHTML = `<div class="message error">${escapeHtml(response.error.message)}</div>`;
-          session.textContent = "Acceso no disponible";
-          return;
-        }
-        session.textContent = `${response.data.user.name} · ${response.data.generatedAt}`;
-        if (!response.data.rooms.length) {
-          rooms.innerHTML = '<div class="message">No hay habitaciones configuradas para este motel.</div>';
-          return;
-        }
-        rooms.innerHTML = response.data.rooms.map((room) => `
-          <article class="room" data-status="${escapeHtml(room.estado)}">
-            <h2>Habitación ${escapeHtml(room.numeroHabitacion)}</h2>
-            <p>${escapeHtml(room.tipoHabitacion)}</p>
-            <strong>${escapeHtml(room.estado)}</strong>
-            <p>Desde $${Number(room.precioDesde).toLocaleString("es-MX")}</p>
-          </article>
-        `).join("");
-      };
-
-      google.script.run
-        .withSuccessHandler(render)
-        .withFailureHandler((error) => render({ ok: false, error: { message: error.message || String(error) } }))
-        .apiGetInitialState();
-    </script>
-  </body>
+<head>
+  <base target="_top"><meta charset="utf-8">
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#172033;background:#f4f7fb;--nav:#173a5e;--blue:#1f6fa8;--line:#dbe3ed;--muted:#66758a;--danger:#b42318}
+    *{box-sizing:border-box} body{margin:0} button,input,select{font:inherit}
+    header{background:var(--nav);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;gap:20px;align-items:center} h1{margin:0;font-size:22px} header p{margin:4px 0 0;opacity:.8;font-size:13px}
+    nav{display:flex;gap:8px;background:#fff;border-bottom:1px solid var(--line);padding:10px 24px}.nav-btn{border:0;background:transparent;padding:10px 14px;border-radius:8px;color:#40516a;cursor:pointer}.nav-btn.active{background:#e8f2fa;color:#174e78;font-weight:700}
+    main{padding:22px;max-width:1500px;margin:auto}.view[hidden],.catalog-panel[hidden]{display:none}
+    .section-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:16px}.section-head h2{margin:0}.muted{color:var(--muted)}
+    .btn{border:0;border-radius:8px;padding:9px 13px;cursor:pointer;font-weight:650}.primary{background:var(--blue);color:#fff}.secondary{background:#edf2f7;color:#2d4158}.danger{background:#fff0ee;color:var(--danger)}.btn:disabled{opacity:.55;cursor:wait}
+    .catalog-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}.catalog-tab{border:1px solid var(--line);background:#fff;padding:9px 14px;border-radius:999px;cursor:pointer}.catalog-tab.active{background:var(--nav);color:#fff;border-color:var(--nav)}
+    .card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 3px 12px rgba(19,46,76,.05);overflow:hidden}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #edf1f5}th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#627189;background:#f8fafc}tr:last-child td{border-bottom:0}.actions{display:flex;gap:7px}.status{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700}.status.on{background:#e7f6e9;color:#26712d}.status.off{background:#f1f3f5;color:#687382}.warning{color:#8a5b00;font-size:12px}
+    #rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.room{background:#fff;border-radius:12px;box-shadow:0 3px 12px rgba(19,46,76,.08);padding:16px;border-left:7px solid #9aa4b2}.room h3{margin:0 0 4px}.room p{margin:4px 0;color:#536176}.room[data-status="DISPONIBLE"]{border-color:#3d8b40}.room[data-status="OCUPADA"]{border-color:#c62828}.room[data-status="SUCIA"]{border-color:#f9a825}.room[data-status="LIMPIEZA"]{border-color:#1565c0}.room[data-status="MANTENIMIENTO"]{border-color:#424242}
+    dialog{border:0;border-radius:14px;padding:0;width:min(560px,calc(100% - 28px));box-shadow:0 22px 70px rgba(18,32,51,.28)}dialog::backdrop{background:rgba(14,28,45,.48)}.dialog-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.dialog-head h3{margin:0}.close{border:0;background:transparent;font-size:24px;cursor:pointer}.form{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}label{font-size:13px;font-weight:700;color:#42536a}input,select{border:1px solid #cbd6e2;border-radius:8px;padding:10px;background:#fff}input:focus,select:focus{outline:2px solid #b9daf0;border-color:#5d9bc5}.dialog-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:9px;margin-top:6px}.message{background:#fff;border-radius:10px;padding:18px}.error{color:var(--danger);border:1px solid #fecdca;background:#fff6f5}.toast{position:fixed;right:20px;bottom:20px;background:#20344b;color:#fff;padding:12px 16px;border-radius:9px;box-shadow:0 8px 30px #0003;z-index:5}.toast.error{background:#8d1d17;color:#fff}.empty{text-align:center;padding:32px;color:var(--muted)}
+    @media(max-width:650px){header{align-items:flex-start;flex-direction:column}nav,main{padding-left:14px;padding-right:14px}.form{grid-template-columns:1fr}.field.full,.dialog-actions{grid-column:1}.section-head{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header><div><h1>FEMA</h1><p>Gestión hotelera</p></div><p id="session">Cargando sesión…</p></header>
+  <nav><button class="nav-btn active" data-view="catalogs">Catálogos</button><button class="nav-btn" data-view="roomsView">Habitaciones</button></nav>
+  <main>
+    <section id="catalogs" class="view">
+      <div class="section-head"><div><h2>Catálogos</h2><div class="muted">Altas, bajas y cambios con historial de auditoría.</div></div><button id="addButton" class="btn primary">+ Agregar hotel</button></div>
+      <div class="catalog-tabs"><button class="catalog-tab active" data-catalog="motels">Hoteles</button><button class="catalog-tab" data-catalog="receptionists">Personal de recepción</button><button class="catalog-tab" data-catalog="cleaningStaff">Personal de limpieza</button></div>
+      <div id="catalogContent" class="card"><div class="message">Cargando catálogos…</div></div>
+    </section>
+    <section id="roomsView" class="view" hidden><div class="section-head"><div><h2>Habitaciones</h2><div class="muted">Estado operativo actual.</div></div></div><div id="rooms"><div class="message">Cargando habitaciones…</div></div></section>
+  </main>
+  <dialog id="editor"><div class="dialog-head"><h3 id="dialogTitle"></h3><button class="close" type="button" aria-label="Cerrar">×</button></div><form id="editorForm" class="form"></form></dialog>
+  <div id="toast" class="toast" hidden></div>
+  <script>
+    const state={catalog:"motels",catalogs:null,rooms:null};
+    const $=(selector)=>document.querySelector(selector); const $$=(selector)=>[...document.querySelectorAll(selector)];
+    const escapeHtml=(value)=>String(value??"").replace(/[&<>'"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#039;",'"':"&quot;"})[c]);
+    const call=(method,...args)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method](...args));
+    const hotelName=(id)=>state.catalogs?.motels.find((x)=>x.idMotel===id)?.nombre||id;
+    function notify(message,isError=false){const el=$("#toast");el.textContent=message;el.className=`toast${isError?" error":""}`;el.hidden=false;setTimeout(()=>el.hidden=true,3500)}
+    function unwrap(response){if(!response?.ok)throw new Error(response?.error?.message||"No fue posible completar la operación.");return response.data}
+    async function loadAll(){try{const [catalogs,initial]=await Promise.all([call("apiGetCatalogs"),call("apiGetInitialState")]);state.catalogs=unwrap(catalogs);state.rooms=unwrap(initial).rooms;$("#session").textContent=state.catalogs.user.name;renderCatalog();renderRooms()}catch(error){$("#catalogContent").innerHTML=`<div class="message error">${escapeHtml(error.message||error)}</div>`;$("#rooms").innerHTML=`<div class="message error">${escapeHtml(error.message||error)}</div>`}}
+    function status(active){return `<span class="status ${active?"on":"off"}">${active?"Activo":"Baja"}</span>`}
+    function actionButtons(kind,id,active){return `<div class="actions"><button class="btn secondary" data-edit="${kind}" data-id="${escapeHtml(id)}">Editar</button><button class="btn ${active?"danger":"secondary"}" data-toggle="${kind}" data-id="${escapeHtml(id)}" data-active="${!active}">${active?"Dar de baja":"Reactivar"}</button></div>`}
+    function table(headers,rows){return `<div class="table-wrap"><table><thead><tr>${headers.map((h)=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")||`<tr><td colspan="${headers.length}" class="empty">No hay registros.</td></tr>`}</tbody></table></div>`}
+    function renderCatalog(){if(!state.catalogs)return;let html="";if(state.catalog==="motels")html=table(["Hotel","Zona horaria","Estado","Acciones"],state.catalogs.motels.map((x)=>`<tr><td><strong>${escapeHtml(x.nombre)}</strong></td><td>${escapeHtml(x.zonaHoraria)}</td><td>${status(x.activo)}</td><td>${actionButtons("motels",x.idMotel,x.activo)}</td></tr>`));
+      if(state.catalog==="receptionists")html=table(["Nombre","Hotel","Correo / acceso","Estado","Acciones"],state.catalogs.receptionists.map((x)=>`<tr><td><strong>${escapeHtml(`${x.nombre} ${x.apellidos}`.trim())}</strong></td><td>${escapeHtml(hotelName(x.idMotel))}</td><td>${x.correo?escapeHtml(x.correo):'<span class="warning">Correo pendiente</span>'}</td><td>${status(x.activo)}</td><td>${actionButtons("receptionists",x.idUsuario,x.activo)}</td></tr>`));
+      if(state.catalog==="cleaningStaff")html=table(["Nombre","Hotel","Turno habitual","Estado","Acciones"],state.catalogs.cleaningStaff.map((x)=>`<tr><td><strong>${escapeHtml(`${x.nombre} ${x.apellidos}`.trim())}</strong></td><td>${escapeHtml(hotelName(x.idMotel))}</td><td>${escapeHtml(x.turnoHabitual)}</td><td>${status(x.activo)}</td><td>${actionButtons("cleaningStaff",x.idPersonalLimpieza,x.activo)}</td></tr>`));
+      $("#catalogContent").innerHTML=html;const labels={motels:"hotel",receptionists:"recepcionista",cleaningStaff:"personal de limpieza"};$("#addButton").textContent=`+ Agregar ${labels[state.catalog]}`}
+    function renderRooms(){const root=$("#rooms");if(!state.rooms?.length){root.innerHTML='<div class="message">No hay habitaciones configuradas para este hotel.</div>';return}root.innerHTML=state.rooms.map((room)=>`<article class="room" data-status="${escapeHtml(room.estado)}"><h3>Habitación ${escapeHtml(room.numeroHabitacion)}</h3><p>${escapeHtml(room.tipoHabitacion)}</p><strong>${escapeHtml(room.estado)}</strong><p>Desde $${Number(room.precioDesde).toLocaleString("es-MX")}</p></article>`).join("")}
+    const hotelOptions=(selected="")=>state.catalogs.motels.filter((x)=>x.activo||x.idMotel===selected).map((x)=>`<option value="${escapeHtml(x.idMotel)}" ${x.idMotel===selected?"selected":""}>${escapeHtml(x.nombre)}</option>`).join("");
+    function openEditor(kind,id=""){const item=id?state.catalogs[kind].find((x)=>[x.idMotel,x.idUsuario,x.idPersonalLimpieza].includes(id)):null;const form=$("#editorForm");if(kind==="motels"){$("#dialogTitle").textContent=item?"Editar hotel":"Agregar hotel";form.innerHTML=`<input type="hidden" name="idMotel" value="${escapeHtml(item?.idMotel||"")}"><div class="field full"><label>Nombre del hotel</label><input name="nombre" required value="${escapeHtml(item?.nombre||"")}"></div><div class="field full"><label>Zona horaria</label><input name="zonaHoraria" required value="${escapeHtml(item?.zonaHoraria||"America/Mexico_City")}"></div>${formActions()}`}
+      if(kind==="receptionists"){$("#dialogTitle").textContent=item?"Editar recepcionista":"Agregar recepcionista";form.innerHTML=`<input type="hidden" name="idUsuario" value="${escapeHtml(item?.idUsuario||"")}"><div class="field full"><label>Hotel</label><select name="idMotel" required>${hotelOptions(item?.idMotel||"")}</select></div><div class="field"><label>Nombre</label><input name="nombre" required value="${escapeHtml(item?.nombre||"")}"></div><div class="field"><label>Apellidos</label><input name="apellidos" value="${escapeHtml(item?.apellidos||"")}"></div><div class="field full"><label>Correo de Google <span class="muted">(opcional por ahora)</span></label><input type="email" name="correo" value="${escapeHtml(item?.correo||"")}"></div>${formActions()}`}
+      if(kind==="cleaningStaff"){$("#dialogTitle").textContent=item?"Editar personal de limpieza":"Agregar personal de limpieza";form.innerHTML=`<input type="hidden" name="idPersonalLimpieza" value="${escapeHtml(item?.idPersonalLimpieza||"")}"><div class="field full"><label>Hotel</label><select name="idMotel" required>${hotelOptions(item?.idMotel||"")}</select></div><div class="field"><label>Nombre</label><input name="nombre" required value="${escapeHtml(item?.nombre||"")}"></div><div class="field"><label>Apellidos</label><input name="apellidos" value="${escapeHtml(item?.apellidos||"")}"></div><div class="field full"><label>Turno habitual</label><select name="turnoHabitual" required>${["MATUTINO","VESPERTINO","NOCTURNO","MIXTO"].map((v)=>`<option ${v===item?.turnoHabitual?"selected":""}>${v}</option>`).join("")}</select></div>${formActions()}`}
+      form.dataset.kind=kind;$("#editor").showModal()}
+    const formActions=()=>'<div class="dialog-actions"><button type="button" class="btn secondary cancel">Cancelar</button><button type="submit" class="btn primary">Guardar</button></div>';
+    async function refreshCatalogs(){state.catalogs=unwrap(await call("apiGetCatalogs"));renderCatalog()}
+    $("#editorForm").addEventListener("submit",async(event)=>{event.preventDefault();const form=event.currentTarget;const button=form.querySelector('[type="submit"]');button.disabled=true;try{const data=Object.fromEntries(new FormData(form));const method={motels:"apiSaveMotel",receptionists:"apiSaveReceptionist",cleaningStaff:"apiSaveCleaningStaff"}[form.dataset.kind];unwrap(await call(method,data));$("#editor").close();await refreshCatalogs();notify("Registro guardado.")}catch(error){notify(error.message||error,true)}finally{button.disabled=false}});
+    $("#catalogContent").addEventListener("click",async(event)=>{const edit=event.target.closest("[data-edit]");if(edit)return openEditor(edit.dataset.edit,edit.dataset.id);const toggle=event.target.closest("[data-toggle]");if(!toggle)return;toggle.disabled=true;try{const method={motels:"apiSetMotelActive",receptionists:"apiSetReceptionistActive",cleaningStaff:"apiSetCleaningStaffActive"}[toggle.dataset.toggle];unwrap(await call(method,toggle.dataset.id,toggle.dataset.active==="true"));await refreshCatalogs();notify("Estado actualizado.")}catch(error){notify(error.message||error,true);toggle.disabled=false}});
+    $$(".nav-btn").forEach((button)=>button.addEventListener("click",()=>{$$(".nav-btn").forEach((x)=>x.classList.toggle("active",x===button));$$(".view").forEach((x)=>x.hidden=x.id!==button.dataset.view)}));
+    $$(".catalog-tab").forEach((button)=>button.addEventListener("click",()=>{state.catalog=button.dataset.catalog;$$('.catalog-tab').forEach((x)=>x.classList.toggle("active",x===button));renderCatalog()}));
+    $("#addButton").addEventListener("click",()=>openEditor(state.catalog));$(".close").addEventListener("click",()=>$("#editor").close());$("#editorForm").addEventListener("click",(e)=>{if(e.target.classList.contains("cancel"))$("#editor").close()});
+    loadAll();
+  </script>
+</body>
 </html>
-

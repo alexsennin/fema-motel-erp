@@ -1,0 +1,23 @@
+{
+  "projectName": "FEMA",
+  "slug": "fema-motel-erp",
+  "github": {
+    "repository": "alexsennin/fema-motel-erp",
+    "url": "https://github.com/alexsennin/fema-motel-erp",
+    "visibility": "private"
+  },
+  "drive": {
+    "folderId": "1gCku0dR_rE6i5oXVyuxiWgiY18LiBPHU",
+    "folderUrl": "https://drive.google.com/drive/folders/1gCku0dR_rE6i5oXVyuxiWgiY18LiBPHU"
+  },
+  "sheets": {
+    "spreadsheetId": "1bbQdeYSPdJayzWU9ViLSgHhFD5uIFxvFiQmYWOULaDg",
+    "url": "https://docs.google.com/spreadsheets/d/1bbQdeYSPdJayzWU9ViLSgHhFD5uIFxvFiQmYWOULaDg/edit",
+    "role": "database"
+  },
+  "appsScript": {
+    "scriptId": "1TuToqsS-8-mEO4vN7UbeNsV8OUMVnPZOm4smkQPM_dXkc7XuIUiVdI3l",
+    "url": "https://script.google.com/d/1TuToqsS-8-mEO4vN7UbeNsV8OUMVnPZOm4smkQPM_dXkc7XuIUiVdI3l/edit",
+    "rootDir": "dist"
+  }
+}

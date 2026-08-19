@@ -45,6 +45,12 @@ function findRowById_(sheetName: string, idColumn: string, id: string): SheetRow
   return readRows_(sheetName).find((row) => String(row[idColumn]) === id) ?? null;
 }
 
+function requireRowById_(sheetName: string, idColumn: string, id: string): SheetRow {
+  const row = findRowById_(sheetName, idColumn, id);
+  if (!row || isExampleRow_(row)) throw new Error(`No se encontró ${id} en ${sheetName}`);
+  return row;
+}
+
 function updateRowById_(sheetName: string, idColumn: string, id: string, patch: SheetRow): void {
   const sheet = getRequiredSheet_(sheetName);
   const lastColumn = sheet.getLastColumn();
@@ -79,4 +85,3 @@ function now_(): Date {
 function isExampleRow_(row: SheetRow): boolean {
   return Object.values(row).some((value) => String(value).includes(FEMA_CONFIG.exampleMarker));
 }
-

@@ -19,7 +19,7 @@
     "src/server/02_SheetRepository.ts",
     "src/server/03_Authorization.ts",
     "src/server/04_RoomService.ts",
-    "src/server/05_WebApp.ts"
+    "src/server/05_WebApp.ts",
+    "src/server/06_CatalogService.ts"
   ]
 }
-

@@ -11,6 +11,7 @@ const FEMA_CONFIG = Object.freeze({
     rolePermissions: "RolPermisos",
     permissions: "Permisos",
     motels: "Moteles",
+    cleaningStaff: "PersonalLimpieza",
     roomTypes: "TiposHabitacion",
     rates: "Tarifas",
     rooms: "Habitaciones",
@@ -27,4 +28,3 @@ const FEMA_CONFIG = Object.freeze({
     sessions: "Sesiones"
   })
 });
-
