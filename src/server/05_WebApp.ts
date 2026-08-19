@@ -64,6 +64,26 @@ function apiSetCleaningStaffActive(id: string, active: boolean): ApiResponse<nul
   catch (error) { return apiError_(error); }
 }
 
+function apiSaveRoomType(input: RoomTypeInput): ApiResponse<{ id: string }> {
+  try { return { ok: true, data: { id: saveRoomType_(getCurrentUser_(), input) } }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiSetRoomTypeActive(id: string, active: boolean): ApiResponse<null> {
+  try { setRoomTypeActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiSaveRoom(input: RoomInput): ApiResponse<{ id: string }> {
+  try { return { ok: true, data: { id: saveRoom_(getCurrentUser_(), input) } }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiSetRoomActive(id: string, active: boolean): ApiResponse<null> {
+  try { setRoomActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
+  catch (error) { return apiError_(error); }
+}
+
 function apiError_<T>(error: unknown): ApiResponse<T> {
   const message = error instanceof Error ? error.message : "Ocurrió un error inesperado.";
   console.error(error);

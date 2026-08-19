@@ -60,6 +60,6 @@ docs/github-actions/  Plantillas de validación y despliegue
 
 ## Estado actual
 
-La aplicación incluye el mapa de habitaciones, el servicio inicial para registrar entradas y el ABC de los catálogos de hoteles, personal de recepción y personal de limpieza. Las bajas son lógicas y cada modificación queda registrada en `Bitacora`.
+La aplicación incluye el mapa de habitaciones, el servicio inicial para registrar entradas y el ABC de los catálogos de hoteles, personal de recepción, personal de limpieza, tipos de habitación y habitaciones. Las bajas son lógicas y cada modificación queda registrada en `Bitacora`.
 
 El acceso a catálogos requiere `PER-CAT-GEST`. El personal de recepción utiliza el rol `ROL-RECEPCION`; una persona puede existir en el catálogo sin correo, pero necesita una cuenta de Google registrada para iniciar sesión.

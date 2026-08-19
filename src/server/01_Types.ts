@@ -32,10 +32,14 @@ interface InitialState {
 interface CatalogMotel { idMotel: string; nombre: string; zonaHoraria: string; activo: boolean; }
 interface CatalogReceptionist { idUsuario: string; idMotel: string; correo: string; nombre: string; apellidos: string; activo: boolean; }
 interface CatalogCleaningStaff { idPersonalLimpieza: string; idMotel: string; nombre: string; apellidos: string; turnoHabitual: string; activo: boolean; }
-interface CatalogState { user: FemaUser; motels: CatalogMotel[]; receptionists: CatalogReceptionist[]; cleaningStaff: CatalogCleaningStaff[]; }
+interface CatalogRoomType { idTipo: string; idMotel: string; nombre: string; precioPersonaExtra: number; activo: boolean; }
+interface CatalogRoom { idHabitacion: string; idMotel: string; numero: string; idTipo: string; puntosLimpieza: number; estado: RoomStatus; idCicloActual: string; activo: boolean; }
+interface CatalogState { user: FemaUser; motels: CatalogMotel[]; receptionists: CatalogReceptionist[]; cleaningStaff: CatalogCleaningStaff[]; roomTypes: CatalogRoomType[]; catalogRooms: CatalogRoom[]; }
 interface MotelInput { idMotel?: string; nombre: string; zonaHoraria: string; }
 interface ReceptionistInput { idUsuario?: string; idMotel: string; correo: string; nombre: string; apellidos: string; }
 interface CleaningStaffInput { idPersonalLimpieza?: string; idMotel: string; nombre: string; apellidos: string; turnoHabitual: string; }
+interface RoomTypeInput { idTipo?: string; idMotel: string; nombre: string; precioPersonaExtra: number; }
+interface RoomInput { idHabitacion?: string; idMotel: string; numero: string; idTipo: string; puntosLimpieza: number; }
 
 interface EntryInput {
   idHabitacion: string;
