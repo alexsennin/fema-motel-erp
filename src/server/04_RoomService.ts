@@ -37,8 +37,7 @@ function registerEntry_(user: FemaUser, input: EntryInput): { idCiclo: string; i
 
     const rate = findRowById_(FEMA_CONFIG.sheets.rates, "IdTarifa", input.idTarifa);
     if (!rate || rate.Activo !== true || String(rate.IdTipo) !== String(room.IdTipo)) throw new Error("Tarifa no válida para la habitación.");
-    const shift = findRowById_(FEMA_CONFIG.sheets.shifts, "IdTurno", input.idTurno);
-    if (!shift || String(shift.IdMotel) !== user.idMotel || String(shift.Estado) !== "ABIERTO") throw new Error("No existe un turno abierto válido.");
+    const shift = requireOpenShiftForUser_(user, input.idTurno);
 
     const createdAt = now_();
     const cycleId = newId_("CIC");
@@ -65,7 +64,7 @@ function registerEntry_(user: FemaUser, input: EntryInput): { idCiclo: string; i
     });
     appendRow_(FEMA_CONFIG.sheets.roomEvents, {
       IdEvento: eventId, IdCiclo: cycleId, IdHabitacion: input.idHabitacion, EstadoAnterior: "DISPONIBLE",
-      EstadoNuevo: "OCUPADA", FechaHora: createdAt, IdUsuario: user.idUsuario, Comentario: "Entrada registrada", Origen: "WEBAPP"
+      EstadoNuevo: "OCUPADA", FechaHora: createdAt, IdEmpleado: user.idUsuario, Comentario: "Entrada registrada", IdTurno: String(shift.IdTurno)
     });
     updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "OCUPADA", IdCicloActual: cycleId });
 
@@ -80,4 +79,3 @@ function registerEntry_(user: FemaUser, input: EntryInput): { idCiclo: string; i
     return { idCiclo: cycleId, idEstancia: stayId };
   });
 }
-

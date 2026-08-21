@@ -13,12 +13,23 @@ function apiGetInitialState(): ApiResponse<InitialState> {
       data: {
         user,
         generatedAt: Utilities.formatDate(now_(), FEMA_CONFIG.timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX"),
-        rooms: listRoomCards_(user)
+        rooms: listRoomCards_(user),
+        shift: getShiftState_(user)
       }
     };
   } catch (error) {
     return apiError_(error);
   }
+}
+
+function apiOpenShift(): ApiResponse<ShiftState> {
+  try { return { ok: true, data: openShift_(getCurrentUser_()) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiCloseShift(idTurno: string): ApiResponse<ShiftState> {
+  try { return { ok: true, data: closeShift_(getCurrentUser_(), idTurno) }; }
+  catch (error) { return apiError_(error); }
 }
 
 function apiRegisterEntry(input: EntryInput): ApiResponse<{ idCiclo: string; idEstancia: string }> {

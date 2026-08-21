@@ -27,6 +27,25 @@ interface InitialState {
   user: FemaUser;
   generatedAt: string;
   rooms: RoomCard[];
+  shift: ShiftState;
+}
+
+type ShiftStatus = "ABIERTO" | "CERRADO";
+
+interface ShiftView {
+  idTurno: string;
+  idMotel: string;
+  idEmpleadoApertura: string;
+  empleadoApertura: string;
+  fechaHoraApertura: string;
+  fechaHoraCierre: string;
+  estado: ShiftStatus;
+}
+
+interface ShiftState {
+  activeShift: ShiftView | null;
+  recentShifts: ShiftView[];
+  canOperate: boolean;
 }
 
 interface CatalogMotel { idMotel: string; nombre: string; zonaHoraria: string; activo: boolean; }
