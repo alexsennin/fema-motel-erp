@@ -14,6 +14,7 @@ function apiGetInitialState(): ApiResponse<InitialState> {
         user,
         generatedAt: Utilities.formatDate(now_(), FEMA_CONFIG.timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX"),
         rooms: listRoomCards_(user),
+        entryRates: listEntryRates_(user),
         shift: getShiftState_(user)
       }
     };
@@ -32,7 +33,7 @@ function apiCloseShift(idTurno: string): ApiResponse<ShiftState> {
   catch (error) { return apiError_(error); }
 }
 
-function apiRegisterEntry(input: EntryInput): ApiResponse<{ idCiclo: string; idEstancia: string }> {
+function apiRegisterEntry(input: EntryInput): ApiResponse<EntryResult> {
   try {
     return { ok: true, data: registerEntry_(getCurrentUser_(), input) };
   } catch (error) {

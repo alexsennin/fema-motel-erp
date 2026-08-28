@@ -15,6 +15,7 @@ interface FemaUser {
 interface RoomCard {
   idHabitacion: string;
   idMotel: string;
+  idTipo: string;
   numeroHabitacion: string;
   tipoHabitacion: string;
   precioDesde: number;
@@ -23,10 +24,21 @@ interface RoomCard {
   idCicloActual: string | null;
 }
 
+interface EntryRate {
+  idTarifa: string;
+  idTipo: string;
+  nombre: string;
+  minutos: number;
+  precioBase: number;
+  personasIncluidas: number;
+  precioPersonaExtra: number;
+}
+
 interface InitialState {
   user: FemaUser;
   generatedAt: string;
   rooms: RoomCard[];
+  entryRates: EntryRate[];
   shift: ShiftState;
 }
 
@@ -63,13 +75,18 @@ interface RoomInput { idHabitacion?: string; idMotel: string; numero: string; id
 interface EntryInput {
   idHabitacion: string;
   idTarifa: string;
-  idTurno: string;
   marcaModeloVehiculo: string;
   placas: string;
   personasExtra: number;
   formaPago: string;
-  montoPago: number;
   idempotencyKey: string;
+}
+
+interface EntryResult {
+  idCiclo: string;
+  idEstancia: string;
+  precioFinal: number;
+  fechaHoraSalidaPrevista: string;
 }
 
 interface ApiResponse<T> {
