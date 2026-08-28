@@ -14,6 +14,14 @@ function normalizedEmail_(value: unknown): string {
   return email;
 }
 
+function catalogDate_(value: CellValue): string {
+  if (!value) return "";
+  if (value instanceof Date) return Utilities.formatDate(value, FEMA_CONFIG.timeZone, "yyyy-MM-dd");
+  const text = String(value).trim();
+  const match = text.match(/^\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : text;
+}
+
 function assertActiveMotel_(idMotel: string): void {
   const motel = requireRowById_(FEMA_CONFIG.sheets.motels, "IdMotel", idMotel);
   if (motel.Activo !== true) throw new Error("El hotel seleccionado no está activo.");
@@ -34,11 +42,18 @@ function listCatalogs_(user: FemaUser): CatalogState {
   const roomTypes = readRows_(FEMA_CONFIG.sheets.roomTypes).filter((row) => !isExampleRow_(row)).map((row) => ({
     idTipo: String(row.IdTipo), idMotel: String(row.IdMotel), nombre: String(row.NombreTipo), precioPersonaExtra: Number(row.PrecioPersonaExtra) || 0, activo: row.Activo === true
   })).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  const motelByType = new Map(roomTypes.map((type) => [type.idTipo, type.idMotel]));
+  const rates = readRows_(FEMA_CONFIG.sheets.rates).filter((row) => !isExampleRow_(row)).map((row) => ({
+    idTarifa: String(row.IdTarifa), idTipo: String(row.IdTipo), idMotel: motelByType.get(String(row.IdTipo)) ?? "",
+    nombre: String(row.NombreTarifa), minutos: Number(row.Minutos) || 0, precioBase: Number(row.PrecioBase) || 0,
+    personasIncluidas: Number(row.PersonasIncluidas) || 0, vigenciaInicio: catalogDate_(row.VigenciaInicio),
+    vigenciaFin: catalogDate_(row.VigenciaFin), activo: row.Activo === true
+  })).sort((a, b) => a.idMotel.localeCompare(b.idMotel) || a.idTipo.localeCompare(b.idTipo) || a.minutos - b.minutos);
   const catalogRooms = readRows_(FEMA_CONFIG.sheets.rooms).filter((row) => !isExampleRow_(row)).map((row) => ({
     idHabitacion: String(row.IdHabitacion), idMotel: String(row.IdMotel), numero: String(row.NumeroHabitacion), idTipo: String(row.IdTipo),
     puntosLimpieza: Number(row.PuntosLimpieza) || 0, estado: String(row.EstadoActual) as RoomStatus, idCicloActual: String(row.IdCicloActual ?? ""), activo: row.Activo === true
   })).sort((a, b) => a.numero.localeCompare(b.numero, "es", { numeric: true }));
-  return { user, motels, receptionists, cleaningStaff, roomTypes, catalogRooms };
+  return { user, motels, receptionists, cleaningStaff, roomTypes, rates, catalogRooms };
 }
 
 function saveMotel_(user: FemaUser, input: MotelInput): string {
@@ -183,6 +198,51 @@ function setRoomTypeActive_(user: FemaUser, idTipo: string, active: boolean): vo
     }
     updateRowById_(FEMA_CONFIG.sheets.roomTypes, "IdTipo", idTipo, { Activo: active });
     writeAudit_(user, active ? "REACTIVACION" : "BAJA", "TIPO_HABITACION", idTipo, before, { Activo: active }, "Cambio de estado desde catálogo", "CATALOGOS");
+  });
+}
+
+function saveRate_(user: FemaUser, input: RateInput): string {
+  assertPermission_(user, CATALOG_PERMISSION);
+  return withScriptLock_(() => {
+    const idTipo = requiredText_(input.idTipo, "El tipo de habitación");
+    const roomType = requireRowById_(FEMA_CONFIG.sheets.roomTypes, "IdTipo", idTipo);
+    if (roomType.Activo !== true) throw new Error("El tipo de habitación seleccionado no está activo.");
+    assertActiveMotel_(String(roomType.IdMotel));
+    const nombre = requiredText_(input.nombre, "El nombre de la tarifa");
+    const minutos = Number(input.minutos);
+    const precioBase = Number(input.precioBase);
+    const personasIncluidas = Number(input.personasIncluidas);
+    if (!Number.isInteger(minutos) || minutos <= 0) throw new Error("La duración debe expresarse en minutos y ser mayor que cero.");
+    if (!Number.isFinite(precioBase) || precioBase < 0) throw new Error("El precio base debe ser igual o mayor que cero.");
+    if (!Number.isInteger(personasIncluidas) || personasIncluidas < 0) throw new Error("Las personas incluidas deben ser un número entero igual o mayor que cero.");
+    const vigenciaInicio = String(input.vigenciaInicio ?? "").trim();
+    const vigenciaFin = String(input.vigenciaFin ?? "").trim();
+    if (vigenciaInicio && !/^\d{4}-\d{2}-\d{2}$/.test(vigenciaInicio)) throw new Error("La fecha inicial no es válida.");
+    if (vigenciaFin && !/^\d{4}-\d{2}-\d{2}$/.test(vigenciaFin)) throw new Error("La fecha final no es válida.");
+    if (vigenciaInicio && vigenciaFin && vigenciaInicio > vigenciaFin) throw new Error("La vigencia final no puede ser anterior a la inicial.");
+    const duplicate = readRows_(FEMA_CONFIG.sheets.rates).find((row) => !isExampleRow_(row) && String(row.IdTipo) === idTipo && Number(row.Minutos) === minutos && String(row.IdTarifa) !== String(input.idTarifa ?? ""));
+    if (duplicate) throw new Error("Ya existe una tarifa con esa duración para el tipo de habitación.");
+    const patch = { IdTipo: idTipo, NombreTarifa: nombre, Minutos: minutos, PrecioBase: precioBase, PersonasIncluidas: personasIncluidas, VigenciaInicio: vigenciaInicio, VigenciaFin: vigenciaFin };
+    if (input.idTarifa) {
+      const before = requireRowById_(FEMA_CONFIG.sheets.rates, "IdTarifa", input.idTarifa);
+      updateRowById_(FEMA_CONFIG.sheets.rates, "IdTarifa", input.idTarifa, patch);
+      writeAudit_(user, "CAMBIO", "TARIFA", input.idTarifa, before, patch, "Edición desde catálogo", "CATALOGOS");
+      return input.idTarifa;
+    }
+    const id = newId_("TAR");
+    const record = { IdTarifa: id, ...patch, Activo: true };
+    appendRow_(FEMA_CONFIG.sheets.rates, record);
+    writeAudit_(user, "ALTA", "TARIFA", id, null, record, "Alta desde catálogo", "CATALOGOS");
+    return id;
+  });
+}
+
+function setRateActive_(user: FemaUser, idTarifa: string, active: boolean): void {
+  assertPermission_(user, CATALOG_PERMISSION);
+  withScriptLock_(() => {
+    const before = requireRowById_(FEMA_CONFIG.sheets.rates, "IdTarifa", idTarifa);
+    updateRowById_(FEMA_CONFIG.sheets.rates, "IdTarifa", idTarifa, { Activo: active });
+    writeAudit_(user, active ? "REACTIVACION" : "BAJA", "TARIFA", idTarifa, before, { Activo: active }, "Cambio de estado desde catálogo", "CATALOGOS");
   });
 }
 

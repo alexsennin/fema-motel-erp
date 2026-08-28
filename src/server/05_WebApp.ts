@@ -86,6 +86,16 @@ function apiSetRoomTypeActive(id: string, active: boolean): ApiResponse<null> {
   catch (error) { return apiError_(error); }
 }
 
+function apiSaveRate(input: RateInput): ApiResponse<{ id: string }> {
+  try { return { ok: true, data: { id: saveRate_(getCurrentUser_(), input) } }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiSetRateActive(id: string, active: boolean): ApiResponse<null> {
+  try { setRateActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
+  catch (error) { return apiError_(error); }
+}
+
 function apiSaveRoom(input: RoomInput): ApiResponse<{ id: string }> {
   try { return { ok: true, data: { id: saveRoom_(getCurrentUser_(), input) } }; }
   catch (error) { return apiError_(error); }

@@ -64,12 +64,14 @@ interface CatalogMotel { idMotel: string; nombre: string; zonaHoraria: string; a
 interface CatalogReceptionist { idUsuario: string; idMotel: string; correo: string; nombre: string; apellidos: string; activo: boolean; }
 interface CatalogCleaningStaff { idPersonalLimpieza: string; idMotel: string; nombre: string; apellidos: string; turnoHabitual: string; activo: boolean; }
 interface CatalogRoomType { idTipo: string; idMotel: string; nombre: string; precioPersonaExtra: number; activo: boolean; }
+interface CatalogRate { idTarifa: string; idTipo: string; idMotel: string; nombre: string; minutos: number; precioBase: number; personasIncluidas: number; vigenciaInicio: string; vigenciaFin: string; activo: boolean; }
 interface CatalogRoom { idHabitacion: string; idMotel: string; numero: string; idTipo: string; puntosLimpieza: number; estado: RoomStatus; idCicloActual: string; activo: boolean; }
-interface CatalogState { user: FemaUser; motels: CatalogMotel[]; receptionists: CatalogReceptionist[]; cleaningStaff: CatalogCleaningStaff[]; roomTypes: CatalogRoomType[]; catalogRooms: CatalogRoom[]; }
+interface CatalogState { user: FemaUser; motels: CatalogMotel[]; receptionists: CatalogReceptionist[]; cleaningStaff: CatalogCleaningStaff[]; roomTypes: CatalogRoomType[]; rates: CatalogRate[]; catalogRooms: CatalogRoom[]; }
 interface MotelInput { idMotel?: string; nombre: string; zonaHoraria: string; }
 interface ReceptionistInput { idUsuario?: string; idMotel: string; correo: string; nombre: string; apellidos: string; }
 interface CleaningStaffInput { idPersonalLimpieza?: string; idMotel: string; nombre: string; apellidos: string; turnoHabitual: string; }
 interface RoomTypeInput { idTipo?: string; idMotel: string; nombre: string; precioPersonaExtra: number; }
+interface RateInput { idTarifa?: string; idTipo: string; nombre: string; minutos: number; precioBase: number; personasIncluidas: number; vigenciaInicio: string; vigenciaFin: string; }
 interface RoomInput { idHabitacion?: string; idMotel: string; numero: string; idTipo: string; puntosLimpieza: number; }
 
 interface EntryInput {

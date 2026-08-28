@@ -33,8 +33,10 @@ function listEntryRates_(user: FemaUser): EntryRate[] {
   return readRows_(FEMA_CONFIG.sheets.rates)
     .filter((row) => {
       if (row.Activo !== true || isExampleRow_(row) || !roomTypes.has(String(row.IdTipo))) return false;
-      const starts = row.VigenciaInicio ? new Date(String(row.VigenciaInicio)).getTime() : null;
-      const ends = row.VigenciaFin ? new Date(String(row.VigenciaFin)).getTime() : null;
+      const startText = String(row.VigenciaInicio ?? "");
+      const endText = String(row.VigenciaFin ?? "");
+      const starts = startText ? new Date(startText.length === 10 ? `${startText}T00:00:00` : startText).getTime() : null;
+      const ends = endText ? new Date(endText.length === 10 ? `${endText}T23:59:59` : endText).getTime() : null;
       return (!starts || starts <= today) && (!ends || ends >= today);
     })
     .map((row) => ({
