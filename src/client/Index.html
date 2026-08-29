@@ -4,10 +4,10 @@
   <base target="_top"><meta charset="utf-8">
   <style>
     :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#172033;background:#f4f7fb;--nav:#173a5e;--blue:#1f6fa8;--line:#dbe3ed;--muted:#66758a;--danger:#b42318}
-    *{box-sizing:border-box} body{margin:0} button,input,select{font:inherit}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;display:flex;flex-direction:column} button,input,select{font:inherit}
     header{background:var(--nav);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;gap:20px;align-items:center} h1{margin:0;font-size:22px} header p{margin:4px 0 0;opacity:.8;font-size:13px}
     nav{display:flex;gap:8px;background:#fff;border-bottom:1px solid var(--line);padding:10px 24px}.nav-btn{border:0;background:transparent;padding:10px 14px;border-radius:8px;color:#40516a;cursor:pointer}.nav-btn.active{background:#e8f2fa;color:#174e78;font-weight:700}
-    main{padding:22px;max-width:1500px;margin:auto}.view[hidden],.catalog-panel[hidden]{display:none}
+    main{padding:22px;max-width:1500px;margin:0 auto;flex:1;width:100%}.view[hidden],.catalog-panel[hidden]{display:none}
     .section-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:16px}.section-head h2{margin:0}.muted{color:var(--muted)}
     .btn{border:0;border-radius:8px;padding:9px 13px;cursor:pointer;font-weight:650}.primary{background:var(--blue);color:#fff}.secondary{background:#edf2f7;color:#2d4158}.danger{background:#fff0ee;color:var(--danger)}.btn:disabled{opacity:.55;cursor:wait}
     .catalog-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}.catalog-tab{border:1px solid var(--line);background:#fff;padding:9px 14px;border-radius:999px;cursor:pointer}.catalog-tab.active{background:var(--nav);color:#fff;border-color:var(--nav)}
@@ -15,6 +15,7 @@
     .shift-panel{padding:16px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:18px}.shift-panel h3{margin:0 0 5px}.shift-meta{margin:0;color:var(--muted);font-size:13px}.shift-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.shift-open{color:#26712d}.shift-closed{color:#687382}.room-actions{margin-top:14px}.room-actions .btn{width:100%}.entry-summary{grid-column:1/-1;background:#eef6fc;border-radius:10px;padding:14px;display:flex;justify-content:space-between;gap:12px;align-items:center}.entry-summary strong{font-size:20px;color:#174e78}
     #rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.room{background:#fff;border-radius:12px;box-shadow:0 3px 12px rgba(19,46,76,.08);padding:16px;border-left:7px solid #9aa4b2}.room h3{margin:0 0 4px}.room p{margin:4px 0;color:#536176}.room[data-status="DISPONIBLE"]{border-color:#3d8b40}.room[data-status="OCUPADA"]{border-color:#c62828}.room[data-status="SUCIA"]{border-color:#f9a825}.room[data-status="LIMPIEZA"]{border-color:#1565c0}.room[data-status="MANTENIMIENTO"]{border-color:#424242}
     dialog{border:0;border-radius:14px;padding:0;width:min(560px,calc(100% - 28px));box-shadow:0 22px 70px rgba(18,32,51,.28)}dialog::backdrop{background:rgba(14,28,45,.48)}.dialog-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.dialog-head h3{margin:0}.close{border:0;background:transparent;font-size:24px;cursor:pointer}.form{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}label{font-size:13px;font-weight:700;color:#42536a}input,select{border:1px solid #cbd6e2;border-radius:8px;padding:10px;background:#fff}input:focus,select:focus{outline:2px solid #b9daf0;border-color:#5d9bc5}.dialog-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:9px;margin-top:6px}.message{background:#fff;border-radius:10px;padding:18px}.error{color:var(--danger);border:1px solid #fecdca;background:#fff6f5}.toast{position:fixed;right:20px;bottom:20px;background:#20344b;color:#fff;padding:12px 16px;border-radius:9px;box-shadow:0 8px 30px #0003;z-index:5}.toast.error{background:#8d1d17;color:#fff}.empty{text-align:center;padding:32px;color:var(--muted)}
+    footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);padding:18px 24px;text-align:center;font-size:12px}footer strong{color:#40516a}
     @media(max-width:650px){header{align-items:flex-start;flex-direction:column}nav,main{padding-left:14px;padding-right:14px}.form{grid-template-columns:1fr}.field.full,.dialog-actions{grid-column:1}.section-head{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
@@ -29,6 +30,7 @@
     </section>
     <section id="roomsView" class="view" hidden><div class="section-head"><div><h2>Habitaciones</h2><div class="muted">Estado operativo actual. Abrir o cerrar turno no modifica ninguna habitación.</div></div></div><div id="shiftPanel" class="card shift-panel"><div><h3>Cargando turno…</h3></div></div><div id="rooms"><div class="message">Cargando habitaciones…</div></div></section>
   </main>
+  <footer>© 2026 FEMA. Todos los derechos reservados. · Versión 0.1.0 (compilación 8) · Desarrollado por <strong>IntegraTech</strong></footer>
   <dialog id="editor"><div class="dialog-head"><h3 id="dialogTitle"></h3><button class="close" type="button" aria-label="Cerrar">×</button></div><form id="editorForm" class="form"></form></dialog>
   <dialog id="entryEditor"><div class="dialog-head"><h3 id="entryTitle">Registrar entrada</h3><button class="close-entry" type="button" aria-label="Cerrar">×</button></div><form id="entryForm" class="form"></form></dialog>
   <div id="toast" class="toast" hidden></div>
