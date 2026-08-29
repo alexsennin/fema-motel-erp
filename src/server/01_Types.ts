@@ -136,6 +136,29 @@ interface CleaningAssignmentResult {
   estadoHabitacion: "LIMPIEZA";
 }
 
+interface CleaningCompletionInput {
+  idHabitacion: string;
+  idempotencyKey: string;
+}
+
+interface CleaningCompletionResult {
+  idLimpieza: string;
+  idCiclo: string;
+  minutosLimpieza: number;
+  estadoHabitacion: "DISPONIBLE";
+}
+
+interface RoomMovement {
+  idEvento: string;
+  idCiclo: string;
+  estadoAnterior: string;
+  estadoNuevo: string;
+  fechaHora: string;
+  idEmpleado: string;
+  empleado: string;
+  comentario: string;
+}
+
 interface ApiResponse<T> {
   ok: boolean;
   data?: T;

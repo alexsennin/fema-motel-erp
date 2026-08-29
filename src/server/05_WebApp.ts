@@ -52,6 +52,16 @@ function apiAssignCleaning(input: CleaningAssignmentInput): ApiResponse<Cleaning
   catch (error) { return apiError_(error); }
 }
 
+function apiCompleteCleaning(input: CleaningCompletionInput): ApiResponse<CleaningCompletionResult> {
+  try { return { ok: true, data: completeCleaning_(getCurrentUser_(), input) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiGetRoomMovements(idHabitacion: string): ApiResponse<RoomMovement[]> {
+  try { return { ok: true, data: listRoomMovements_(getCurrentUser_(), idHabitacion) }; }
+  catch (error) { return apiError_(error); }
+}
+
 function apiGetCatalogs(): ApiResponse<CatalogState> {
   try { return { ok: true, data: listCatalogs_(getCurrentUser_()) }; }
   catch (error) { return apiError_(error); }

@@ -134,6 +134,62 @@ function assignCleaning_(user: FemaUser, input: CleaningAssignmentInput): Cleani
   });
 }
 
+function completeCleaning_(user: FemaUser, input: CleaningCompletionInput): CleaningCompletionResult {
+  assertPermission_(user, "PER-HAB-GEST");
+  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
+  return withScriptLock_(() => {
+    const duplicate = readRows_(FEMA_CONFIG.sheets.audit).find((row) => String(row.Motivo) === input.idempotencyKey);
+    if (duplicate) throw new Error("Esta operación ya fue registrada.");
+    const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
+    if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
+    if (String(room.EstadoActual) !== "LIMPIEZA" || !room.IdCicloActual) throw new Error("La habitación ya no se encuentra en limpieza.");
+    const cycleId = String(room.IdCicloActual);
+    const cleaning = readRows_(FEMA_CONFIG.sheets.cleanings).find((row) =>
+      !isExampleRow_(row) && String(row.IdCiclo) === cycleId && String(row.IdHabitacion) === input.idHabitacion &&
+      ["ASIGNADA", "EN_PROCESO"].includes(String(row.Estado))
+    );
+    if (!cleaning) throw new Error("No se encontró una limpieza activa para la habitación.");
+    const shift = requireOpenShiftForUser_(user);
+    const finishedAt = now_();
+    const startedAt = cleaning.FechaHoraInicio instanceof Date ? cleaning.FechaHoraInicio : new Date(String(cleaning.FechaHoraInicio || cleaning.FechaHoraAsignacion));
+    const minutes = Number.isNaN(startedAt.getTime()) ? 0 : Math.max(0, Math.round((finishedAt.getTime() - startedAt.getTime()) / 60000));
+    const cleaningId = String(cleaning.IdLimpieza);
+
+    updateRowById_(FEMA_CONFIG.sheets.cleanings, "IdLimpieza", cleaningId, {
+      FechaHoraFin: finishedAt, MinutosLimpieza: minutes, Estado: "FINALIZADA", IdUsuarioFinaliza: user.idUsuario
+    });
+    appendRow_(FEMA_CONFIG.sheets.roomEvents, {
+      IdEvento: newId_("EVT"), IdCiclo: cycleId, IdHabitacion: input.idHabitacion,
+      EstadoAnterior: "LIMPIEZA", EstadoNuevo: "DISPONIBLE", FechaHora: finishedAt,
+      IdEmpleado: user.idUsuario, Comentario: "Limpieza finalizada", IdTurno: String(shift.IdTurno)
+    });
+    updateRowById_(FEMA_CONFIG.sheets.cycles, "IdCiclo", cycleId, { FechaHoraFin: finishedAt, EstadoCiclo: "CERRADO" });
+    updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "DISPONIBLE", IdCicloActual: "" });
+    writeAudit_(user, "FINALIZAR_LIMPIEZA", "LIMPIEZA", cleaningId, cleaning,
+      { FechaHoraFin: finishedAt, MinutosLimpieza: minutes, Estado: "FINALIZADA", EstadoHabitacion: "DISPONIBLE" }, input.idempotencyKey);
+    return { idLimpieza: cleaningId, idCiclo: cycleId, minutosLimpieza: minutes, estadoHabitacion: "DISPONIBLE" };
+  });
+}
+
+function listRoomMovements_(user: FemaUser, idHabitacion: string): RoomMovement[] {
+  assertPermission_(user, "PER-HAB-GEST");
+  const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", idHabitacion);
+  if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
+  const names = shiftEmployeeNames_();
+  return readRows_(FEMA_CONFIG.sheets.roomEvents)
+    .filter((row) => !isExampleRow_(row) && String(row.IdHabitacion) === idHabitacion)
+    .map((row) => {
+      const employeeId = String(row.IdEmpleado ?? "");
+      return {
+        idEvento: String(row.IdEvento), idCiclo: String(row.IdCiclo ?? ""),
+        estadoAnterior: String(row.EstadoAnterior ?? ""), estadoNuevo: String(row.EstadoNuevo ?? ""),
+        fechaHora: formatShiftDate_(row.FechaHora), idEmpleado: employeeId,
+        empleado: names.get(employeeId) ?? (employeeId || "Sistema"), comentario: String(row.Comentario ?? "")
+      };
+    })
+    .sort((a, b) => new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime());
+}
+
 function registerExit_(user: FemaUser, input: ExitInput): ExitResult {
   assertPermission_(user, "PER-HAB-GEST");
   if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
