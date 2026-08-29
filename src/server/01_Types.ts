@@ -53,6 +53,7 @@ interface InitialState {
 
 interface CleaningStaffOption {
   idPersonalLimpieza: string;
+  idMotel: string;
   nombre: string;
   disponible: boolean;
   habitacionAsignada: string;

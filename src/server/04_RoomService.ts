@@ -57,6 +57,7 @@ function listCleaningStaffOptions_(user: FemaUser): CleaningStaffOption[] {
       const active = activeByStaff.get(String(row.IdPersonalLimpieza));
       return {
         idPersonalLimpieza: String(row.IdPersonalLimpieza),
+        idMotel: String(row.IdMotel),
         nombre: `${String(row.Nombre)} ${String(row.Apellidos ?? "")}`.trim(),
         disponible: !active,
         habitacionAsignada: active ? roomNumbers.get(String(active.IdHabitacion)) ?? String(active.IdHabitacion) : ""
@@ -83,7 +84,7 @@ function assignCleaning_(user: FemaUser, input: CleaningAssignmentInput): Cleani
     );
     if (existingCleaning) throw new Error("La habitación ya tiene una limpieza activa.");
     const staff = requireRowById_(FEMA_CONFIG.sheets.cleaningStaff, "IdPersonalLimpieza", input.idPersonalLimpieza);
-    if (staff.Activo !== true || String(staff.IdMotel) !== user.idMotel) throw new Error("El personal seleccionado no pertenece al hotel o no está activo.");
+    if (staff.Activo !== true || String(staff.IdMotel) !== String(room.IdMotel)) throw new Error("El personal seleccionado no pertenece al mismo motel de la habitación o no está activo.");
     const staffBusy = readRows_(FEMA_CONFIG.sheets.cleanings).some((row) =>
       !isExampleRow_(row) && String(row.IdPersonalLimpieza) === input.idPersonalLimpieza && ["ASIGNADA", "EN_PROCESO"].includes(String(row.Estado))
     );
