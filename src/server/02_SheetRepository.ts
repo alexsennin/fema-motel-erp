@@ -30,6 +30,20 @@ function readRows_(sheetName: string): SheetRow[] {
     }, {}));
 }
 
+function readDisplayRows_(sheetName: string): SheetRow[] {
+  const sheet = getRequiredSheet_(sheetName);
+  const lastColumn = sheet.getLastColumn();
+  const lastRow = sheet.getLastRow();
+  if (lastColumn === 0 || lastRow < FEMA_CONFIG.dataStartRow) return [];
+  const headers = sheet.getRange(FEMA_CONFIG.headerRow, 1, 1, lastColumn).getDisplayValues()[0].map((header) => header.trim());
+  return sheet.getRange(FEMA_CONFIG.dataStartRow, 1, lastRow - FEMA_CONFIG.dataStartRow + 1, lastColumn).getDisplayValues()
+    .filter((row) => row.some((value) => value !== ""))
+    .map((row) => headers.reduce<SheetRow>((record, header, index) => {
+      if (header) record[header] = row[index] ?? "";
+      return record;
+    }, {}));
+}
+
 function appendRow_(sheetName: string, record: SheetRow): void {
   const sheet = getRequiredSheet_(sheetName);
   const lastColumn = sheet.getLastColumn();
