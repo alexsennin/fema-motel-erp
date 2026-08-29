@@ -124,7 +124,6 @@ interface ExitResult {
 interface CleaningAssignmentInput {
   idHabitacion: string;
   idPersonalLimpieza: string;
-  observaciones: string;
   idempotencyKey: string;
 }
 

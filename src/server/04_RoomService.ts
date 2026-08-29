@@ -69,8 +69,6 @@ function listCleaningStaffOptions_(user: FemaUser): CleaningStaffOption[] {
 function assignCleaning_(user: FemaUser, input: CleaningAssignmentInput): CleaningAssignmentResult {
   assertPermission_(user, "PER-HAB-GEST");
   if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
-  const observations = String(input.observaciones ?? "").trim();
-  if (observations.length > 300) throw new Error("Las observaciones no pueden superar 300 caracteres.");
 
   return withScriptLock_(() => {
     const duplicate = readRows_(FEMA_CONFIG.sheets.audit).find((row) => String(row.Motivo) === input.idempotencyKey);
@@ -97,13 +95,13 @@ function assignCleaning_(user: FemaUser, input: CleaningAssignmentInput): Cleani
       IdLimpieza: cleaningId, IdCiclo: cycleId, IdHabitacion: input.idHabitacion,
       IdPersonalLimpieza: input.idPersonalLimpieza, FechaHoraAsignacion: assignedAt,
       FechaHoraInicio: assignedAt, FechaHoraFin: "", MinutosLimpieza: "",
-      Puntos: Number(room.PuntosLimpieza) || 0, Estado: "EN_PROCESO", Observaciones: observations,
+      Puntos: Number(room.PuntosLimpieza) || 0, Estado: "EN_PROCESO",
       IdUsuarioAsigna: user.idUsuario, IdUsuarioFinaliza: ""
     });
     appendRow_(FEMA_CONFIG.sheets.roomEvents, {
       IdEvento: newId_("EVT"), IdCiclo: cycleId, IdHabitacion: input.idHabitacion,
       EstadoAnterior: "SUCIA", EstadoNuevo: "LIMPIEZA", FechaHora: assignedAt,
-      IdEmpleado: user.idUsuario, Comentario: observations || `Limpieza asignada a ${String(staff.Nombre)}`,
+      IdEmpleado: user.idUsuario, Comentario: `Limpieza asignada a ${String(staff.Nombre)}`,
       IdTurno: String(shift.IdTurno)
     });
     updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "LIMPIEZA" });
