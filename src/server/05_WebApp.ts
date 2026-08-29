@@ -15,6 +15,7 @@ function apiGetInitialState(): ApiResponse<InitialState> {
         generatedAt: Utilities.formatDate(now_(), FEMA_CONFIG.timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX"),
         rooms: listRoomCards_(user),
         entryRates: listEntryRates_(user),
+        cleaningStaff: listCleaningStaffOptions_(user),
         shift: getShiftState_(user)
       }
     };
@@ -43,6 +44,11 @@ function apiRegisterEntry(input: EntryInput): ApiResponse<EntryResult> {
 
 function apiRegisterExit(input: ExitInput): ApiResponse<ExitResult> {
   try { return { ok: true, data: registerExit_(getCurrentUser_(), input) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiAssignCleaning(input: CleaningAssignmentInput): ApiResponse<CleaningAssignmentResult> {
+  try { return { ok: true, data: assignCleaning_(getCurrentUser_(), input) }; }
   catch (error) { return apiError_(error); }
 }
 

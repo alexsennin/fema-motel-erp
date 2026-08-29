@@ -27,6 +27,9 @@ interface RoomCard {
   fechaHoraSalidaPrevista: string;
   placas: string;
   precioFinal: number;
+  idLimpiezaActiva: string | null;
+  personalLimpieza: string;
+  fechaHoraInicioLimpieza: string;
 }
 
 interface EntryRate {
@@ -44,7 +47,15 @@ interface InitialState {
   generatedAt: string;
   rooms: RoomCard[];
   entryRates: EntryRate[];
+  cleaningStaff: CleaningStaffOption[];
   shift: ShiftState;
+}
+
+interface CleaningStaffOption {
+  idPersonalLimpieza: string;
+  nombre: string;
+  disponible: boolean;
+  habitacionAsignada: string;
 }
 
 type ShiftStatus = "ABIERTO" | "CERRADO";
@@ -107,6 +118,19 @@ interface ExitResult {
   idEstancia: string;
   fechaHoraSalidaReal: string;
   estadoHabitacion: "SUCIA";
+}
+
+interface CleaningAssignmentInput {
+  idHabitacion: string;
+  idPersonalLimpieza: string;
+  observaciones: string;
+  idempotencyKey: string;
+}
+
+interface CleaningAssignmentResult {
+  idLimpieza: string;
+  idCiclo: string;
+  estadoHabitacion: "LIMPIEZA";
 }
 
 interface ApiResponse<T> {

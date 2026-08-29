@@ -6,12 +6,19 @@ function listRoomCards_(user: FemaUser): RoomCard[] {
   const activeStays = new Map(readRows_(FEMA_CONFIG.sheets.stays)
     .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel && String(row.EstadoEstancia) === "ACTIVA")
     .map((row) => [String(row.IdCiclo), row]));
+  const cleaningNames = new Map(readRows_(FEMA_CONFIG.sheets.cleaningStaff)
+    .filter((row) => !isExampleRow_(row))
+    .map((row) => [String(row.IdPersonalLimpieza), `${String(row.Nombre)} ${String(row.Apellidos ?? "")}`.trim()]));
+  const activeCleanings = new Map(readRows_(FEMA_CONFIG.sheets.cleanings)
+    .filter((row) => !isExampleRow_(row) && ["ASIGNADA", "EN_PROCESO"].includes(String(row.Estado)))
+    .map((row) => [String(row.IdCiclo), row]));
 
   return readRows_(FEMA_CONFIG.sheets.rooms)
     .filter((room) => room.Activo === true && String(room.IdMotel) === user.idMotel && !isExampleRow_(room))
     .map((room) => {
       const typeId = String(room.IdTipo);
       const activeStay = room.IdCicloActual ? activeStays.get(String(room.IdCicloActual)) : null;
+      const activeCleaning = room.IdCicloActual ? activeCleanings.get(String(room.IdCicloActual)) : null;
       const prices = rates.filter((rate) => String(rate.IdTipo) === typeId).map((rate) => Number(rate.PrecioBase) || 0);
       return {
         idHabitacion: String(room.IdHabitacion),
@@ -27,10 +34,82 @@ function listRoomCards_(user: FemaUser): RoomCard[] {
         fechaHoraEntrada: activeStay ? formatShiftDate_(activeStay.FechaHoraEntrada) : "",
         fechaHoraSalidaPrevista: activeStay ? formatShiftDate_(activeStay.FechaHoraSalidaPrevista) : "",
         placas: activeStay ? String(activeStay.Placas ?? "") : "",
-        precioFinal: activeStay ? Number(activeStay.PrecioFinal) || 0 : 0
+        precioFinal: activeStay ? Number(activeStay.PrecioFinal) || 0 : 0,
+        idLimpiezaActiva: activeCleaning ? String(activeCleaning.IdLimpieza) : null,
+        personalLimpieza: activeCleaning ? cleaningNames.get(String(activeCleaning.IdPersonalLimpieza)) ?? String(activeCleaning.IdPersonalLimpieza) : "",
+        fechaHoraInicioLimpieza: activeCleaning ? formatShiftDate_(activeCleaning.FechaHoraInicio || activeCleaning.FechaHoraAsignacion) : ""
       };
     })
     .sort((a, b) => a.numeroHabitacion.localeCompare(b.numeroHabitacion, "es", { numeric: true }));
+}
+
+function listCleaningStaffOptions_(user: FemaUser): CleaningStaffOption[] {
+  const roomNumbers = new Map(readRows_(FEMA_CONFIG.sheets.rooms)
+    .filter((row) => String(row.IdMotel) === user.idMotel && !isExampleRow_(row))
+    .map((row) => [String(row.IdHabitacion), String(row.NumeroHabitacion)]));
+  const activeByStaff = new Map(readRows_(FEMA_CONFIG.sheets.cleanings)
+    .filter((row) => !isExampleRow_(row) && ["ASIGNADA", "EN_PROCESO"].includes(String(row.Estado)))
+    .map((row) => [String(row.IdPersonalLimpieza), row]));
+
+  return readRows_(FEMA_CONFIG.sheets.cleaningStaff)
+    .filter((row) => !isExampleRow_(row) && row.Activo === true && String(row.IdMotel) === user.idMotel)
+    .map((row) => {
+      const active = activeByStaff.get(String(row.IdPersonalLimpieza));
+      return {
+        idPersonalLimpieza: String(row.IdPersonalLimpieza),
+        nombre: `${String(row.Nombre)} ${String(row.Apellidos ?? "")}`.trim(),
+        disponible: !active,
+        habitacionAsignada: active ? roomNumbers.get(String(active.IdHabitacion)) ?? String(active.IdHabitacion) : ""
+      };
+    })
+    .sort((a, b) => Number(b.disponible) - Number(a.disponible) || a.nombre.localeCompare(b.nombre, "es"));
+}
+
+function assignCleaning_(user: FemaUser, input: CleaningAssignmentInput): CleaningAssignmentResult {
+  assertPermission_(user, "PER-HAB-GEST");
+  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
+  const observations = String(input.observaciones ?? "").trim();
+  if (observations.length > 300) throw new Error("Las observaciones no pueden superar 300 caracteres.");
+
+  return withScriptLock_(() => {
+    const duplicate = readRows_(FEMA_CONFIG.sheets.audit).find((row) => String(row.Motivo) === input.idempotencyKey);
+    if (duplicate) throw new Error("Esta operación ya fue registrada.");
+    const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
+    if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
+    if (String(room.EstadoActual) !== "SUCIA" || !room.IdCicloActual) throw new Error("La habitación ya no está sucia o no tiene un ciclo activo.");
+    const cycleId = String(room.IdCicloActual);
+    const existingCleaning = readRows_(FEMA_CONFIG.sheets.cleanings).find((row) =>
+      !isExampleRow_(row) && String(row.IdCiclo) === cycleId && ["ASIGNADA", "EN_PROCESO"].includes(String(row.Estado))
+    );
+    if (existingCleaning) throw new Error("La habitación ya tiene una limpieza activa.");
+    const staff = requireRowById_(FEMA_CONFIG.sheets.cleaningStaff, "IdPersonalLimpieza", input.idPersonalLimpieza);
+    if (staff.Activo !== true || String(staff.IdMotel) !== user.idMotel) throw new Error("El personal seleccionado no pertenece al hotel o no está activo.");
+    const staffBusy = readRows_(FEMA_CONFIG.sheets.cleanings).some((row) =>
+      !isExampleRow_(row) && String(row.IdPersonalLimpieza) === input.idPersonalLimpieza && ["ASIGNADA", "EN_PROCESO"].includes(String(row.Estado))
+    );
+    if (staffBusy) throw new Error("El personal seleccionado ya está atendiendo otra habitación.");
+    const shift = requireOpenShiftForUser_(user);
+    const assignedAt = now_();
+    const cleaningId = newId_("LMP");
+
+    appendRow_(FEMA_CONFIG.sheets.cleanings, {
+      IdLimpieza: cleaningId, IdCiclo: cycleId, IdHabitacion: input.idHabitacion,
+      IdPersonalLimpieza: input.idPersonalLimpieza, FechaHoraAsignacion: assignedAt,
+      FechaHoraInicio: assignedAt, FechaHoraFin: "", MinutosLimpieza: "",
+      Puntos: Number(room.PuntosLimpieza) || 0, Estado: "EN_PROCESO", Observaciones: observations,
+      IdUsuarioAsigna: user.idUsuario, IdUsuarioFinaliza: ""
+    });
+    appendRow_(FEMA_CONFIG.sheets.roomEvents, {
+      IdEvento: newId_("EVT"), IdCiclo: cycleId, IdHabitacion: input.idHabitacion,
+      EstadoAnterior: "SUCIA", EstadoNuevo: "LIMPIEZA", FechaHora: assignedAt,
+      IdEmpleado: user.idUsuario, Comentario: observations || `Limpieza asignada a ${String(staff.Nombre)}`,
+      IdTurno: String(shift.IdTurno)
+    });
+    updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "LIMPIEZA" });
+    writeAudit_(user, "ASIGNAR_LIMPIEZA", "LIMPIEZA", cleaningId, room,
+      { cycleId, idPersonalLimpieza: input.idPersonalLimpieza, EstadoHabitacion: "LIMPIEZA" }, input.idempotencyKey);
+    return { idLimpieza: cleaningId, idCiclo: cycleId, estadoHabitacion: "LIMPIEZA" };
+  });
 }
 
 function registerExit_(user: FemaUser, input: ExitInput): ExitResult {
