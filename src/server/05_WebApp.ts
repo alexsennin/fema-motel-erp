@@ -41,6 +41,11 @@ function apiRegisterEntry(input: EntryInput): ApiResponse<EntryResult> {
   }
 }
 
+function apiRegisterExit(input: ExitInput): ApiResponse<ExitResult> {
+  try { return { ok: true, data: registerExit_(getCurrentUser_(), input) }; }
+  catch (error) { return apiError_(error); }
+}
+
 function apiGetCatalogs(): ApiResponse<CatalogState> {
   try { return { ok: true, data: listCatalogs_(getCurrentUser_()) }; }
   catch (error) { return apiError_(error); }

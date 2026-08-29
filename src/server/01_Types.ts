@@ -22,6 +22,11 @@ interface RoomCard {
   puntosLimpieza: number;
   estado: RoomStatus;
   idCicloActual: string | null;
+  idEstanciaActiva: string | null;
+  fechaHoraEntrada: string;
+  fechaHoraSalidaPrevista: string;
+  placas: string;
+  precioFinal: number;
 }
 
 interface EntryRate {
@@ -89,6 +94,19 @@ interface EntryResult {
   idEstancia: string;
   precioFinal: number;
   fechaHoraSalidaPrevista: string;
+}
+
+interface ExitInput {
+  idHabitacion: string;
+  observaciones: string;
+  idempotencyKey: string;
+}
+
+interface ExitResult {
+  idCiclo: string;
+  idEstancia: string;
+  fechaHoraSalidaReal: string;
+  estadoHabitacion: "SUCIA";
 }
 
 interface ApiResponse<T> {

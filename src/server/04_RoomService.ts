@@ -3,11 +3,15 @@ function listRoomCards_(user: FemaUser): RoomCard[] {
     .filter((row) => row.Activo === true)
     .map((row) => [String(row.IdTipo), String(row.NombreTipo)]));
   const rates = readRows_(FEMA_CONFIG.sheets.rates).filter((row) => row.Activo === true);
+  const activeStays = new Map(readRows_(FEMA_CONFIG.sheets.stays)
+    .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel && String(row.EstadoEstancia) === "ACTIVA")
+    .map((row) => [String(row.IdCiclo), row]));
 
   return readRows_(FEMA_CONFIG.sheets.rooms)
     .filter((room) => room.Activo === true && String(room.IdMotel) === user.idMotel && !isExampleRow_(room))
     .map((room) => {
       const typeId = String(room.IdTipo);
+      const activeStay = room.IdCicloActual ? activeStays.get(String(room.IdCicloActual)) : null;
       const prices = rates.filter((rate) => String(rate.IdTipo) === typeId).map((rate) => Number(rate.PrecioBase) || 0);
       return {
         idHabitacion: String(room.IdHabitacion),
@@ -18,10 +22,59 @@ function listRoomCards_(user: FemaUser): RoomCard[] {
         precioDesde: prices.length ? Math.min(...prices) : 0,
         puntosLimpieza: Number(room.PuntosLimpieza) || 0,
         estado: String(room.EstadoActual) as RoomStatus,
-        idCicloActual: room.IdCicloActual ? String(room.IdCicloActual) : null
+        idCicloActual: room.IdCicloActual ? String(room.IdCicloActual) : null,
+        idEstanciaActiva: activeStay ? String(activeStay.IdEstancia) : null,
+        fechaHoraEntrada: activeStay ? formatShiftDate_(activeStay.FechaHoraEntrada) : "",
+        fechaHoraSalidaPrevista: activeStay ? formatShiftDate_(activeStay.FechaHoraSalidaPrevista) : "",
+        placas: activeStay ? String(activeStay.Placas ?? "") : "",
+        precioFinal: activeStay ? Number(activeStay.PrecioFinal) || 0 : 0
       };
     })
     .sort((a, b) => a.numeroHabitacion.localeCompare(b.numeroHabitacion, "es", { numeric: true }));
+}
+
+function registerExit_(user: FemaUser, input: ExitInput): ExitResult {
+  assertPermission_(user, "PER-HAB-GEST");
+  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
+  const observations = String(input.observaciones ?? "").trim();
+  if (observations.length > 300) throw new Error("Las observaciones no pueden superar 300 caracteres.");
+
+  return withScriptLock_(() => {
+    const duplicate = readRows_(FEMA_CONFIG.sheets.audit).find((row) => String(row.Motivo) === input.idempotencyKey);
+    if (duplicate) throw new Error("Esta operación ya fue registrada.");
+
+    const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
+    if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
+    if (String(room.EstadoActual) !== "OCUPADA" || !room.IdCicloActual) throw new Error("La habitación ya no está ocupada o no tiene un ciclo activo.");
+    const cycleId = String(room.IdCicloActual);
+    const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) =>
+      !isExampleRow_(row) && String(row.IdCiclo) === cycleId && String(row.IdHabitacionActual) === input.idHabitacion && String(row.EstadoEstancia) === "ACTIVA"
+    );
+    if (!stay) throw new Error("No se encontró una estancia activa para la habitación.");
+    const shift = requireOpenShiftForUser_(user);
+    const shiftId = String(shift.IdTurno);
+    const finishedAt = now_();
+
+    updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", String(stay.IdEstancia), {
+      FechaHoraSalidaReal: finishedAt,
+      EstadoEstancia: "FINALIZADA"
+    });
+    appendRow_(FEMA_CONFIG.sheets.roomEvents, {
+      IdEvento: newId_("EVT"), IdCiclo: cycleId, IdHabitacion: input.idHabitacion,
+      EstadoAnterior: "OCUPADA", EstadoNuevo: "SUCIA", FechaHora: finishedAt,
+      IdEmpleado: user.idUsuario, Comentario: observations || "Salida registrada", IdTurno: shiftId
+    });
+    updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "SUCIA" });
+    writeAudit_(user, "REGISTRAR_SALIDA", "ESTANCIA", String(stay.IdEstancia), stay,
+      { FechaHoraSalidaReal: finishedAt, EstadoEstancia: "FINALIZADA", EstadoHabitacion: "SUCIA" }, input.idempotencyKey);
+
+    return {
+      idCiclo: cycleId,
+      idEstancia: String(stay.IdEstancia),
+      fechaHoraSalidaReal: Utilities.formatDate(finishedAt, FEMA_CONFIG.timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+      estadoHabitacion: "SUCIA"
+    };
+  });
 }
 
 function listEntryRates_(user: FemaUser): EntryRate[] {
