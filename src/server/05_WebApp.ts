@@ -87,6 +87,11 @@ function apiSetCleaningStaffActive(id: string, active: boolean): ApiResponse<nul
   catch (error) { return apiError_(error); }
 }
 
+function apiSaveCleaningShift(input: CleaningShiftInput): ApiResponse<{ id: string }> {
+  try { return { ok: true, data: { id: saveCleaningShift_(getCurrentUser_(), input) } }; }
+  catch (error) { return apiError_(error); }
+}
+
 function apiSaveRoomType(input: RoomTypeInput): ApiResponse<{ id: string }> {
   try { return { ok: true, data: { id: saveRoomType_(getCurrentUser_(), input) } }; }
   catch (error) { return apiError_(error); }

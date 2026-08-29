@@ -1,6 +1,6 @@
 const CATALOG_PERMISSION = "PER-CAT-GEST";
 const RECEPTION_ROLE = "ROL-RECEPCION";
-const VALID_SHIFTS = Object.freeze(["MATUTINO", "VESPERTINO", "NOCTURNO", "MIXTO"]);
+const VALID_SHIFTS = Object.freeze(["MATUTINO", "VESPERTINO"]);
 
 function requiredText_(value: unknown, label: string): string {
   const text = String(value ?? "").trim();
@@ -39,6 +39,10 @@ function listCatalogs_(user: FemaUser): CatalogState {
   const cleaningStaff = readRows_(FEMA_CONFIG.sheets.cleaningStaff).filter((row) => !isExampleRow_(row)).map((row) => ({
     idPersonalLimpieza: String(row.IdPersonalLimpieza), idMotel: String(row.IdMotel), nombre: String(row.Nombre), apellidos: String(row.Apellidos ?? ""), turnoHabitual: String(row.TurnoHabitual), activo: row.Activo === true
   })).sort((a, b) => `${a.nombre} ${a.apellidos}`.localeCompare(`${b.nombre} ${b.apellidos}`, "es"));
+  const cleaningShifts = readRows_(FEMA_CONFIG.sheets.cleaningShifts).filter((row) => !isExampleRow_(row)).map((row) => ({
+    idTurnoLimpieza: String(row.IdTurnoLimpieza), idMotel: String(row.IdMotel), nombreTurno: String(row.NombreTurno),
+    horaInicio: String(row.HoraInicio), horaFin: String(row.HoraFin), activo: row.Activo === true
+  })).sort((a, b) => a.idMotel.localeCompare(b.idMotel) || a.horaInicio.localeCompare(b.horaInicio));
   const roomTypes = readRows_(FEMA_CONFIG.sheets.roomTypes).filter((row) => !isExampleRow_(row)).map((row) => ({
     idTipo: String(row.IdTipo), idMotel: String(row.IdMotel), nombre: String(row.NombreTipo), precioPersonaExtra: Number(row.PrecioPersonaExtra) || 0, activo: row.Activo === true
   })).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
@@ -53,7 +57,45 @@ function listCatalogs_(user: FemaUser): CatalogState {
     idHabitacion: String(row.IdHabitacion), idMotel: String(row.IdMotel), numero: String(row.NumeroHabitacion), idTipo: String(row.IdTipo),
     puntosLimpieza: Number(row.PuntosLimpieza) || 0, estado: String(row.EstadoActual) as RoomStatus, idCicloActual: String(row.IdCicloActual ?? ""), activo: row.Activo === true
   })).sort((a, b) => a.numero.localeCompare(b.numero, "es", { numeric: true }));
-  return { user, motels, receptionists, cleaningStaff, roomTypes, rates, catalogRooms };
+  return { user, motels, receptionists, cleaningStaff, cleaningShifts, roomTypes, rates, catalogRooms };
+}
+
+function validTime_(value: unknown, label: string): string {
+  const time = requiredText_(value, label);
+  if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)) throw new Error(`${label} debe tener formato HH:mm.`);
+  return time;
+}
+
+function cleaningRangesOverlap_(startA: string, endA: string, startB: string, endB: string): boolean {
+  for (let minute = 0; minute < 1440; minute += 1) {
+    const current = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
+    if (timeInRange_(current, startA, endA) && timeInRange_(current, startB, endB)) return true;
+  }
+  return false;
+}
+
+function saveCleaningShift_(user: FemaUser, input: CleaningShiftInput): string {
+  assertPermission_(user, CATALOG_PERMISSION);
+  return withScriptLock_(() => {
+    const id = requiredText_(input.idTurnoLimpieza, "El turno de limpieza");
+    const before = requireRowById_(FEMA_CONFIG.sheets.cleaningShifts, "IdTurnoLimpieza", id);
+    const idMotel = requiredText_(input.idMotel, "El hotel");
+    const nombreTurno = requiredText_(input.nombreTurno, "El nombre del turno").toUpperCase();
+    if (!VALID_SHIFTS.includes(nombreTurno)) throw new Error("El turno de limpieza no es válido.");
+    if (String(before.IdMotel) !== idMotel || String(before.NombreTurno) !== nombreTurno) throw new Error("No se puede cambiar el hotel ni el nombre de un turno existente.");
+    const horaInicio = validTime_(input.horaInicio, "La hora de inicio");
+    const horaFin = validTime_(input.horaFin, "La hora de fin");
+    if (horaInicio === horaFin) throw new Error("La hora de inicio y fin no pueden ser iguales.");
+    const overlap = readRows_(FEMA_CONFIG.sheets.cleaningShifts).find((row) =>
+      !isExampleRow_(row) && row.Activo === true && String(row.IdMotel) === idMotel &&
+      String(row.IdTurnoLimpieza) !== id && cleaningRangesOverlap_(horaInicio, horaFin, String(row.HoraInicio), String(row.HoraFin))
+    );
+    if (overlap) throw new Error(`El horario se cruza con el turno ${String(overlap.NombreTurno)}.`);
+    const patch = { HoraInicio: horaInicio, HoraFin: horaFin };
+    updateRowById_(FEMA_CONFIG.sheets.cleaningShifts, "IdTurnoLimpieza", id, patch);
+    writeAudit_(user, "CAMBIO", "TURNO_LIMPIEZA", id, before, patch, "Edición desde catálogo", "CATALOGOS");
+    return id;
+  });
 }
 
 function saveMotel_(user: FemaUser, input: MotelInput): string {
@@ -73,6 +115,8 @@ function saveMotel_(user: FemaUser, input: MotelInput): string {
     const id = newId_("MOTEL");
     const record = { IdMotel: id, NombreMotel: nombre, ZonaHoraria: zonaHoraria, Activo: true, CreadoEn: now_() };
     appendRow_(FEMA_CONFIG.sheets.motels, record);
+    appendRow_(FEMA_CONFIG.sheets.cleaningShifts, { IdTurnoLimpieza: newId_("TLIM"), IdMotel: id, NombreTurno: "MATUTINO", HoraInicio: "07:00", HoraFin: "15:00", Activo: true, CreadoEn: now_() });
+    appendRow_(FEMA_CONFIG.sheets.cleaningShifts, { IdTurnoLimpieza: newId_("TLIM"), IdMotel: id, NombreTurno: "VESPERTINO", HoraInicio: "15:00", HoraFin: "23:00", Activo: true, CreadoEn: now_() });
     writeAudit_(user, "ALTA", "MOTEL", id, null, record, "Alta desde catálogo", "CATALOGOS");
     return id;
   });
