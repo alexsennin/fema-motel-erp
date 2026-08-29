@@ -74,7 +74,7 @@ function listCleaningStaffOptions_(user: FemaUser): CleaningStaffOption[] {
 }
 
 function timeInRange_(current: string, start: string, end: string): boolean {
-  if (!/^\\d{2}:\\d{2}$/.test(start) || !/^\\d{2}:\\d{2}$/.test(end) || start === end) return false;
+  if (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end) || start === end) return false;
   return start < end ? current >= start && current < end : current >= start || current < end;
 }
 

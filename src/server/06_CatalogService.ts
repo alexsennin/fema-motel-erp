@@ -62,7 +62,7 @@ function listCatalogs_(user: FemaUser): CatalogState {
 
 function validTime_(value: unknown, label: string): string {
   const time = requiredText_(value, label);
-  if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)) throw new Error(`${label} debe tener formato HH:mm.`);
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new Error(`${label} debe tener formato HH:mm.`);
   return time;
 }
 
