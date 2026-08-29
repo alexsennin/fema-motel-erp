@@ -171,23 +171,35 @@ function completeCleaning_(user: FemaUser, input: CleaningCompletionInput): Clea
   });
 }
 
-function listRoomMovements_(user: FemaUser, idHabitacion: string): RoomMovement[] {
+function listRentalReport_(user: FemaUser): RentalReportRow[] {
   assertPermission_(user, "PER-HAB-GEST");
-  const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", idHabitacion);
-  if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
+  const roomNumbers = new Map(readRows_(FEMA_CONFIG.sheets.rooms)
+    .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel)
+    .map((row) => [String(row.IdHabitacion), String(row.NumeroHabitacion)]));
+  const rateNames = new Map(readRows_(FEMA_CONFIG.sheets.rates)
+    .filter((row) => !isExampleRow_(row))
+    .map((row) => [String(row.IdTarifa), String(row.NombreTarifa)]));
   const names = shiftEmployeeNames_();
-  return readRows_(FEMA_CONFIG.sheets.roomEvents)
-    .filter((row) => !isExampleRow_(row) && String(row.IdHabitacion) === idHabitacion)
+  const payments = new Map(readRows_(FEMA_CONFIG.sheets.payments)
+    .filter((row) => !isExampleRow_(row) && String(row.Estado) === "APLICADO")
+    .map((row) => [String(row.IdEstancia), String(row.FormaPago)]));
+  return readRows_(FEMA_CONFIG.sheets.stays)
+    .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel)
     .map((row) => {
-      const employeeId = String(row.IdEmpleado ?? "");
+      const roomId = String(row.IdHabitacionActual);
+      const employeeId = String(row.IdUsuario ?? "");
       return {
-        idEvento: String(row.IdEvento), idCiclo: String(row.IdCiclo ?? ""),
-        estadoAnterior: String(row.EstadoAnterior ?? ""), estadoNuevo: String(row.EstadoNuevo ?? ""),
-        fechaHora: formatShiftDate_(row.FechaHora), idEmpleado: employeeId,
-        empleado: names.get(employeeId) ?? (employeeId || "Sistema"), comentario: String(row.Comentario ?? "")
+        idEstancia: String(row.IdEstancia), idHabitacion: roomId, habitacion: roomNumbers.get(roomId) ?? roomId,
+        tarifa: rateNames.get(String(row.IdTarifa)) ?? String(row.IdTarifa),
+        fechaHoraEntrada: formatShiftDate_(row.FechaHoraEntrada),
+        fechaHoraSalidaPrevista: formatShiftDate_(row.FechaHoraSalidaPrevista),
+        fechaHoraSalidaReal: formatShiftDate_(row.FechaHoraSalidaReal),
+        estado: String(row.EstadoEstancia), precioFinal: Number(row.PrecioFinal) || 0,
+        formaPago: payments.get(String(row.IdEstancia)) ?? "",
+        recepcionista: names.get(employeeId) ?? (employeeId || "Sistema")
       };
     })
-    .sort((a, b) => new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime());
+    .sort((a, b) => new Date(b.fechaHoraEntrada).getTime() - new Date(a.fechaHoraEntrada).getTime());
 }
 
 function registerExit_(user: FemaUser, input: ExitInput): ExitResult {

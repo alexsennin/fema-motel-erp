@@ -148,15 +148,18 @@ interface CleaningCompletionResult {
   estadoHabitacion: "DISPONIBLE";
 }
 
-interface RoomMovement {
-  idEvento: string;
-  idCiclo: string;
-  estadoAnterior: string;
-  estadoNuevo: string;
-  fechaHora: string;
-  idEmpleado: string;
-  empleado: string;
-  comentario: string;
+interface RentalReportRow {
+  idEstancia: string;
+  idHabitacion: string;
+  habitacion: string;
+  tarifa: string;
+  fechaHoraEntrada: string;
+  fechaHoraSalidaPrevista: string;
+  fechaHoraSalidaReal: string;
+  estado: string;
+  precioFinal: number;
+  formaPago: string;
+  recepcionista: string;
 }
 
 interface ApiResponse<T> {

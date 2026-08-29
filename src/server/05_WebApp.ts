@@ -57,8 +57,8 @@ function apiCompleteCleaning(input: CleaningCompletionInput): ApiResponse<Cleani
   catch (error) { return apiError_(error); }
 }
 
-function apiGetRoomMovements(idHabitacion: string): ApiResponse<RoomMovement[]> {
-  try { return { ok: true, data: listRoomMovements_(getCurrentUser_(), idHabitacion) }; }
+function apiGetRentalReport(): ApiResponse<RentalReportRow[]> {
+  try { return { ok: true, data: listRentalReport_(getCurrentUser_()) }; }
   catch (error) { return apiError_(error); }
 }
 
