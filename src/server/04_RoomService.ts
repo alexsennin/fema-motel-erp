@@ -48,7 +48,7 @@ function listCleaningStaffOptions_(user: FemaUser): CleaningStaffOption[] {
   const timeZone = String(motel.ZonaHoraria || FEMA_CONFIG.timeZone);
   const currentTime = Utilities.formatDate(now_(), timeZone, "HH:mm");
   const activeShiftNames = new Set(readRows_(FEMA_CONFIG.sheets.cleaningShifts)
-    .filter((row) => !isExampleRow_(row) && row.Activo === true && String(row.IdMotel) === user.idMotel && timeInRange_(currentTime, String(row.HoraInicio), String(row.HoraFin)))
+    .filter((row) => !isExampleRow_(row) && row.Activo === true && String(row.IdMotel) === user.idMotel && timeInRange_(currentTime, clockValue_(row.HoraInicio), clockValue_(row.HoraFin)))
     .map((row) => String(row.NombreTurno)));
   const roomNumbers = new Map(readRows_(FEMA_CONFIG.sheets.rooms)
     .filter((row) => String(row.IdMotel) === user.idMotel && !isExampleRow_(row))
@@ -83,7 +83,7 @@ function assertCleaningStaffOnCurrentShift_(staff: SheetRow, idMotel: string): v
   const currentTime = Utilities.formatDate(now_(), String(motel.ZonaHoraria || FEMA_CONFIG.timeZone), "HH:mm");
   const shift = readRows_(FEMA_CONFIG.sheets.cleaningShifts).find((row) =>
     !isExampleRow_(row) && row.Activo === true && String(row.IdMotel) === idMotel &&
-    String(row.NombreTurno) === String(staff.TurnoHabitual) && timeInRange_(currentTime, String(row.HoraInicio), String(row.HoraFin))
+    String(row.NombreTurno) === String(staff.TurnoHabitual) && timeInRange_(currentTime, clockValue_(row.HoraInicio), clockValue_(row.HoraFin))
   );
   if (!shift) throw new Error("El personal seleccionado no se encuentra dentro de su horario de trabajo.");
 }

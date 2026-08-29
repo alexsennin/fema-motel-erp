@@ -22,6 +22,13 @@ function catalogDate_(value: CellValue): string {
   return match ? match[0] : text;
 }
 
+function clockValue_(value: CellValue): string {
+  if (value instanceof Date) return Utilities.formatDate(value, FEMA_CONFIG.timeZone, "HH:mm");
+  const text = String(value ?? "").trim();
+  const match = text.match(/(?:^|\s)([01]?\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?/);
+  return match ? `${match[1].padStart(2, "0")}:${match[2]}` : text;
+}
+
 function assertActiveMotel_(idMotel: string): void {
   const motel = requireRowById_(FEMA_CONFIG.sheets.motels, "IdMotel", idMotel);
   if (motel.Activo !== true) throw new Error("El hotel seleccionado no está activo.");
@@ -41,7 +48,7 @@ function listCatalogs_(user: FemaUser): CatalogState {
   })).sort((a, b) => `${a.nombre} ${a.apellidos}`.localeCompare(`${b.nombre} ${b.apellidos}`, "es"));
   const cleaningShifts = readRows_(FEMA_CONFIG.sheets.cleaningShifts).filter((row) => !isExampleRow_(row)).map((row) => ({
     idTurnoLimpieza: String(row.IdTurnoLimpieza), idMotel: String(row.IdMotel), nombreTurno: String(row.NombreTurno),
-    horaInicio: String(row.HoraInicio), horaFin: String(row.HoraFin), activo: row.Activo === true
+    horaInicio: clockValue_(row.HoraInicio), horaFin: clockValue_(row.HoraFin), activo: row.Activo === true
   })).sort((a, b) => a.idMotel.localeCompare(b.idMotel) || a.horaInicio.localeCompare(b.horaInicio));
   const roomTypes = readRows_(FEMA_CONFIG.sheets.roomTypes).filter((row) => !isExampleRow_(row)).map((row) => ({
     idTipo: String(row.IdTipo), idMotel: String(row.IdMotel), nombre: String(row.NombreTipo), precioPersonaExtra: Number(row.PrecioPersonaExtra) || 0, activo: row.Activo === true
@@ -88,7 +95,7 @@ function saveCleaningShift_(user: FemaUser, input: CleaningShiftInput): string {
     if (horaInicio === horaFin) throw new Error("La hora de inicio y fin no pueden ser iguales.");
     const overlap = readRows_(FEMA_CONFIG.sheets.cleaningShifts).find((row) =>
       !isExampleRow_(row) && row.Activo === true && String(row.IdMotel) === idMotel &&
-      String(row.IdTurnoLimpieza) !== id && cleaningRangesOverlap_(horaInicio, horaFin, String(row.HoraInicio), String(row.HoraFin))
+      String(row.IdTurnoLimpieza) !== id && cleaningRangesOverlap_(horaInicio, horaFin, clockValue_(row.HoraInicio), clockValue_(row.HoraFin))
     );
     if (overlap) throw new Error(`El horario se cruza con el turno ${String(overlap.NombreTurno)}.`);
     const patch = { HoraInicio: horaInicio, HoraFin: horaFin };
