@@ -150,16 +150,15 @@ interface CleaningCompletionResult {
 
 interface RentalReportRow {
   idEstancia: string;
-  idHabitacion: string;
   habitacion: string;
-  tarifa: string;
   fechaHoraEntrada: string;
-  fechaHoraSalidaPrevista: string;
   fechaHoraSalidaReal: string;
-  estado: string;
+  estadoDesocupacion: string;
   precioFinal: number;
   formaPago: string;
-  recepcionista: string;
+  fechaHoraLimpieza: string;
+  personalLimpieza: string;
+  minutosLimpieza: number | null;
 }
 
 interface ApiResponse<T> {

@@ -173,30 +173,38 @@ function completeCleaning_(user: FemaUser, input: CleaningCompletionInput): Clea
 
 function listRentalReport_(user: FemaUser): RentalReportRow[] {
   assertPermission_(user, "PER-HAB-GEST");
+  const activeShift = readRows_(FEMA_CONFIG.sheets.shifts).find((row) =>
+    !isExampleRow_(row) && String(row.IdMotel) === user.idMotel && String(row.Estado) === "ABIERTO"
+  );
+  if (!activeShift) return [];
+  const shiftId = String(activeShift.IdTurno);
   const roomNumbers = new Map(readRows_(FEMA_CONFIG.sheets.rooms)
     .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel)
     .map((row) => [String(row.IdHabitacion), String(row.NumeroHabitacion)]));
-  const rateNames = new Map(readRows_(FEMA_CONFIG.sheets.rates)
+  const cleaningNames = new Map(readRows_(FEMA_CONFIG.sheets.cleaningStaff)
     .filter((row) => !isExampleRow_(row))
-    .map((row) => [String(row.IdTarifa), String(row.NombreTarifa)]));
-  const names = shiftEmployeeNames_();
+    .map((row) => [String(row.IdPersonalLimpieza), `${String(row.Nombre)} ${String(row.Apellidos ?? "")}`.trim()]));
+  const cleanings = new Map(readRows_(FEMA_CONFIG.sheets.cleanings)
+    .filter((row) => !isExampleRow_(row))
+    .map((row) => [String(row.IdCiclo), row]));
   const payments = new Map(readRows_(FEMA_CONFIG.sheets.payments)
-    .filter((row) => !isExampleRow_(row) && String(row.Estado) === "APLICADO")
+    .filter((row) => !isExampleRow_(row) && String(row.IdTurno) === shiftId && String(row.Estado) === "APLICADO")
     .map((row) => [String(row.IdEstancia), String(row.FormaPago)]));
   return readRows_(FEMA_CONFIG.sheets.stays)
-    .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel)
+    .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel && String(row.IdTurno) === shiftId)
     .map((row) => {
       const roomId = String(row.IdHabitacionActual);
-      const employeeId = String(row.IdUsuario ?? "");
+      const cleaning = cleanings.get(String(row.IdCiclo));
+      const hasExit = Boolean(row.FechaHoraSalidaReal);
       return {
-        idEstancia: String(row.IdEstancia), idHabitacion: roomId, habitacion: roomNumbers.get(roomId) ?? roomId,
-        tarifa: rateNames.get(String(row.IdTarifa)) ?? String(row.IdTarifa),
+        idEstancia: String(row.IdEstancia), habitacion: roomNumbers.get(roomId) ?? roomId,
         fechaHoraEntrada: formatShiftDate_(row.FechaHoraEntrada),
-        fechaHoraSalidaPrevista: formatShiftDate_(row.FechaHoraSalidaPrevista),
         fechaHoraSalidaReal: formatShiftDate_(row.FechaHoraSalidaReal),
-        estado: String(row.EstadoEstancia), precioFinal: Number(row.PrecioFinal) || 0,
+        estadoDesocupacion: hasExit ? "SUCIA" : "OCUPADA", precioFinal: Number(row.PrecioFinal) || 0,
         formaPago: payments.get(String(row.IdEstancia)) ?? "",
-        recepcionista: names.get(employeeId) ?? (employeeId || "Sistema")
+        fechaHoraLimpieza: cleaning ? formatShiftDate_(cleaning.FechaHoraInicio || cleaning.FechaHoraAsignacion) : "",
+        personalLimpieza: cleaning ? cleaningNames.get(String(cleaning.IdPersonalLimpieza)) ?? String(cleaning.IdPersonalLimpieza) : "",
+        minutosLimpieza: cleaning && cleaning.MinutosLimpieza !== "" && cleaning.MinutosLimpieza != null ? Number(cleaning.MinutosLimpieza) : null
       };
     })
     .sort((a, b) => new Date(b.fechaHoraEntrada).getTime() - new Date(a.fechaHoraEntrada).getTime());
