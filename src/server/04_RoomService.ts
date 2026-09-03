@@ -2,6 +2,9 @@ function listRoomCards_(user: FemaUser): RoomCard[] {
   const roomTypes = new Map(readRows_(FEMA_CONFIG.sheets.roomTypes)
     .filter((row) => row.Activo === true)
     .map((row) => [String(row.IdTipo), String(row.NombreTipo)]));
+  const extraPersonPrices = new Map(readRows_(FEMA_CONFIG.sheets.roomTypes)
+    .filter((row) => row.Activo === true)
+    .map((row) => [String(row.IdTipo), Number(row.PrecioPersonaExtra) || 0]));
   const rates = readRows_(FEMA_CONFIG.sheets.rates).filter((row) => row.Activo === true);
   const activeStays = new Map(readRows_(FEMA_CONFIG.sheets.stays)
     .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel && String(row.EstadoEstancia) === "ACTIVA")
@@ -33,8 +36,13 @@ function listRoomCards_(user: FemaUser): RoomCard[] {
         idEstanciaActiva: activeStay ? String(activeStay.IdEstancia) : null,
         fechaHoraEntrada: activeStay ? formatShiftDate_(activeStay.FechaHoraEntrada) : "",
         fechaHoraSalidaPrevista: activeStay ? formatShiftDate_(activeStay.FechaHoraSalidaPrevista) : "",
+        marcaModeloVehiculo: activeStay ? String(activeStay.MarcaModeloVehiculo ?? "") : "",
         placas: activeStay ? String(activeStay.Placas ?? "") : "",
+        personasExtra: activeStay ? Number(activeStay.PersonasExtra) || 0 : 0,
+        precioCatalogo: activeStay ? Number(activeStay.PrecioCatalogo) || 0 : 0,
+        ajustePrecio: activeStay ? Number(activeStay.AjustePrecio) || 0 : 0,
         precioFinal: activeStay ? Number(activeStay.PrecioFinal) || 0 : 0,
+        precioPersonaExtra: extraPersonPrices.get(typeId) ?? 0,
         idLimpiezaActiva: activeCleaning ? String(activeCleaning.IdLimpieza) : null,
         personalLimpieza: activeCleaning ? cleaningNames.get(String(activeCleaning.IdPersonalLimpieza)) ?? String(activeCleaning.IdPersonalLimpieza) : "",
         fechaHoraInicioLimpieza: activeCleaning ? formatShiftDate_(activeCleaning.FechaHoraInicio || activeCleaning.FechaHoraAsignacion) : ""
@@ -208,6 +216,84 @@ function listRentalReport_(user: FemaUser): RentalReportRow[] {
       };
     })
     .sort((a, b) => new Date(b.fechaHoraEntrada).getTime() - new Date(a.fechaHoraEntrada).getTime());
+}
+
+function addExtraPerson_(user: FemaUser, input: AddExtraPersonInput): AddExtraPersonResult {
+  assertPermission_(user, "PER-HAB-GEST");
+  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
+  const quantity = Number(input.cantidad);
+  const observations = String(input.observaciones ?? "").trim();
+  if (!Number.isInteger(quantity) || quantity < 1) throw new Error("La cantidad debe ser un número entero mayor que cero.");
+  if (!observations) throw new Error("Las observaciones son obligatorias.");
+  if (observations.length > 300) throw new Error("Las observaciones no pueden superar 300 caracteres.");
+  return withScriptLock_(() => {
+    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+    const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
+    if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel || String(room.EstadoActual) !== "OCUPADA" || !room.IdCicloActual) throw new Error("La habitación ya no está ocupada.");
+    const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === String(room.IdCicloActual) && String(row.IdHabitacionActual) === input.idHabitacion && String(row.EstadoEstancia) === "ACTIVA");
+    if (!stay) throw new Error("No se encontró una estancia activa.");
+    const roomType = requireRowById_(FEMA_CONFIG.sheets.roomTypes, "IdTipo", String(room.IdTipo));
+    const unitPrice = Number(roomType.PrecioPersonaExtra) || 0;
+    if (unitPrice <= 0) throw new Error("El tipo de habitación no tiene precio para persona extra.");
+    requireOpenShiftForUser_(user);
+    const changedAt = now_();
+    const amount = quantity * unitPrice;
+    const currentPeople = Number(stay.PersonasExtra) || 0;
+    const currentPrice = Number(stay.PrecioFinal) || 0;
+    const newPrice = currentPrice + amount;
+    updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", String(stay.IdEstancia), {
+      PersonasExtra: currentPeople + quantity, AjustePrecio: (Number(stay.AjustePrecio) || 0) + amount,
+      PrecioFinal: newPrice, MotivoAjuste: observations
+    });
+    readRows_(FEMA_CONFIG.sheets.payments).filter((row) => !isExampleRow_(row) && String(row.IdEstancia) === String(stay.IdEstancia) && String(row.Estado) === "APLICADO").forEach((payment) => updateRowById_(FEMA_CONFIG.sheets.payments, "IdPago", String(payment.IdPago), { Monto: newPrice }));
+    appendRow_(FEMA_CONFIG.sheets.stayMovements, {
+      IdMovimientoEstancia: newId_("ME"), IdEstancia: String(stay.IdEstancia), TipoMovimiento: "PERSONA_EXTRA",
+      FechaHora: changedAt, IdHabitacionOrigen: input.idHabitacion, IdHabitacionDestino: input.idHabitacion,
+      MinutosAgregados: 0, MontoAjuste: amount, Comentario: observations, IdUsuario: user.idUsuario
+    });
+    writeAudit_(user, "AGREGAR_PERSONA_EXTRA", "ESTANCIA", String(stay.IdEstancia), stay, { PersonasExtra: currentPeople + quantity, PrecioFinal: newPrice }, input.idempotencyKey);
+    return { idEstancia: String(stay.IdEstancia), personasExtra: currentPeople + quantity, precioFinal: newPrice };
+  });
+}
+
+function editActiveStay_(user: FemaUser, input: EditActiveStayInput): EditActiveStayResult {
+  assertPermission_(user, "PER-HAB-GEST");
+  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
+  const observations = String(input.observaciones ?? "").trim();
+  const extraPeople = Number(input.personasExtra);
+  const finalPrice = Number(input.precioFinal);
+  const expectedExit = new Date(String(input.fechaHoraSalidaPrevista));
+  const vehicle = String(input.marcaModeloVehiculo ?? "").trim();
+  const plates = String(input.placas ?? "").trim().toUpperCase();
+  if (!observations) throw new Error("Las observaciones son obligatorias para editar una renta.");
+  if (observations.length > 300) throw new Error("Las observaciones no pueden superar 300 caracteres.");
+  if (!Number.isInteger(extraPeople) || extraPeople < 0) throw new Error("Las personas extra deben ser un entero igual o mayor que cero.");
+  if (!Number.isFinite(finalPrice) || finalPrice < 0) throw new Error("El importe final debe ser igual o mayor que cero.");
+  if (Number.isNaN(expectedExit.getTime())) throw new Error("Indica una fecha y hora de salida válida.");
+  if (vehicle.length > 100 || plates.length > 15) throw new Error("Revisa la longitud de los datos del vehículo.");
+  return withScriptLock_(() => {
+    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+    const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
+    if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel || String(room.EstadoActual) !== "OCUPADA" || !room.IdCicloActual) throw new Error("La habitación ya no está ocupada.");
+    const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === String(room.IdCicloActual) && String(row.IdHabitacionActual) === input.idHabitacion && String(row.EstadoEstancia) === "ACTIVA");
+    if (!stay) throw new Error("No se encontró una estancia activa.");
+    requireOpenShiftForUser_(user);
+    const previousPrice = Number(stay.PrecioFinal) || 0;
+    const priceDifference = finalPrice - previousPrice;
+    const before = { FechaHoraSalidaPrevista: stay.FechaHoraSalidaPrevista, MarcaModeloVehiculo: stay.MarcaModeloVehiculo, Placas: stay.Placas, PersonasExtra: stay.PersonasExtra, PrecioFinal: stay.PrecioFinal };
+    const after = { FechaHoraSalidaPrevista: expectedExit, MarcaModeloVehiculo: vehicle, Placas: plates, PersonasExtra: extraPeople, PrecioFinal: finalPrice };
+    updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", String(stay.IdEstancia), {
+      ...after, AjustePrecio: finalPrice - (Number(stay.PrecioCatalogo) || 0), MotivoAjuste: observations
+    });
+    readRows_(FEMA_CONFIG.sheets.payments).filter((row) => !isExampleRow_(row) && String(row.IdEstancia) === String(stay.IdEstancia) && String(row.Estado) === "APLICADO").forEach((payment) => updateRowById_(FEMA_CONFIG.sheets.payments, "IdPago", String(payment.IdPago), { Monto: finalPrice }));
+    appendRow_(FEMA_CONFIG.sheets.stayMovements, {
+      IdMovimientoEstancia: newId_("ME"), IdEstancia: String(stay.IdEstancia), TipoMovimiento: "EDICION",
+      FechaHora: now_(), IdHabitacionOrigen: input.idHabitacion, IdHabitacionDestino: input.idHabitacion,
+      MinutosAgregados: 0, MontoAjuste: priceDifference, Comentario: observations, IdUsuario: user.idUsuario
+    });
+    writeAudit_(user, "EDITAR_ESTANCIA", "ESTANCIA", String(stay.IdEstancia), before, after, input.idempotencyKey);
+    return { idEstancia: String(stay.IdEstancia), precioFinal: finalPrice };
+  });
 }
 
 function transferOccupiedRoom_(user: FemaUser, input: TransferRoomInput): TransferRoomResult {

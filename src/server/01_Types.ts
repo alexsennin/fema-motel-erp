@@ -25,8 +25,13 @@ interface RoomCard {
   idEstanciaActiva: string | null;
   fechaHoraEntrada: string;
   fechaHoraSalidaPrevista: string;
+  marcaModeloVehiculo: string;
   placas: string;
+  personasExtra: number;
+  precioCatalogo: number;
+  ajustePrecio: number;
   precioFinal: number;
+  precioPersonaExtra: number;
   idLimpiezaActiva: string | null;
   personalLimpieza: string;
   fechaHoraInicioLimpieza: string;
@@ -156,6 +161,35 @@ interface UndoRoomStateInput {
 interface UndoRoomStateResult {
   idHabitacion: string;
   estadoHabitacion: "OCUPADA" | "SUCIA";
+}
+
+interface AddExtraPersonInput {
+  idHabitacion: string;
+  cantidad: number;
+  observaciones: string;
+  idempotencyKey: string;
+}
+
+interface AddExtraPersonResult {
+  idEstancia: string;
+  personasExtra: number;
+  precioFinal: number;
+}
+
+interface EditActiveStayInput {
+  idHabitacion: string;
+  fechaHoraSalidaPrevista: string;
+  marcaModeloVehiculo: string;
+  placas: string;
+  personasExtra: number;
+  precioFinal: number;
+  observaciones: string;
+  idempotencyKey: string;
+}
+
+interface EditActiveStayResult {
+  idEstancia: string;
+  precioFinal: number;
 }
 
 interface CleaningAssignmentInput {
