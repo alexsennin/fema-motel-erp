@@ -47,6 +47,21 @@ function apiRegisterExit(input: ExitInput): ApiResponse<ExitResult> {
   catch (error) { return apiError_(error); }
 }
 
+function apiTransferRoom(input: TransferRoomInput): ApiResponse<TransferRoomResult> {
+  try { return { ok: true, data: transferOccupiedRoom_(getCurrentUser_(), input) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiCancelStay(input: CancelStayInput): ApiResponse<CancelStayResult> {
+  try { return { ok: true, data: cancelOccupiedStay_(getCurrentUser_(), input) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiUndoRoomState(input: UndoRoomStateInput): ApiResponse<UndoRoomStateResult> {
+  try { return { ok: true, data: undoRoomState_(getCurrentUser_(), input) }; }
+  catch (error) { return apiError_(error); }
+}
+
 function apiAssignCleaning(input: CleaningAssignmentInput): ApiResponse<CleaningAssignmentResult> {
   try { return { ok: true, data: assignCleaning_(getCurrentUser_(), input) }; }
   catch (error) { return apiError_(error); }

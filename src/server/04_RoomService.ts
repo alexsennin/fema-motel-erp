@@ -200,7 +200,7 @@ function listRentalReport_(user: FemaUser): RentalReportRow[] {
         idEstancia: String(row.IdEstancia), habitacion: roomNumbers.get(roomId) ?? roomId,
         fechaHoraEntrada: formatShiftDate_(row.FechaHoraEntrada),
         fechaHoraSalidaReal: formatShiftDate_(row.FechaHoraSalidaReal),
-        estadoDesocupacion: hasExit ? "SUCIA" : "OCUPADA", precioFinal: Number(row.PrecioFinal) || 0,
+        estadoDesocupacion: String(row.EstadoEstancia) === "CANCELADA" ? "CANCELADA" : hasExit ? "SUCIA" : "OCUPADA", precioFinal: Number(row.PrecioFinal) || 0,
         formaPago: payments.get(String(row.IdEstancia)) ?? "",
         fechaHoraLimpieza: cleaning ? formatShiftDate_(cleaning.FechaHoraInicio || cleaning.FechaHoraAsignacion) : "",
         personalLimpieza: cleaning ? cleaningNames.get(String(cleaning.IdPersonalLimpieza)) ?? String(cleaning.IdPersonalLimpieza) : "",
@@ -208,6 +208,146 @@ function listRentalReport_(user: FemaUser): RentalReportRow[] {
       };
     })
     .sort((a, b) => new Date(b.fechaHoraEntrada).getTime() - new Date(a.fechaHoraEntrada).getTime());
+}
+
+function transferOccupiedRoom_(user: FemaUser, input: TransferRoomInput): TransferRoomResult {
+  assertPermission_(user, "PER-HAB-GEST");
+  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
+  if (!input.idHabitacionOrigen || !input.idHabitacionDestino || input.idHabitacionOrigen === input.idHabitacionDestino) throw new Error("Selecciona una habitación destino diferente.");
+  return withScriptLock_(() => {
+    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+    const origin = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacionOrigen);
+    const destination = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacionDestino);
+    if (!origin || !destination || isExampleRow_(origin) || isExampleRow_(destination) || String(origin.IdMotel) !== user.idMotel || String(destination.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
+    if (String(origin.EstadoActual) !== "OCUPADA" || !origin.IdCicloActual) throw new Error("La habitación de origen ya no está ocupada.");
+    if (destination.Activo !== true || String(destination.EstadoActual) !== "DISPONIBLE" || destination.IdCicloActual) throw new Error("La habitación destino ya no está disponible.");
+    const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === String(origin.IdCicloActual) && String(row.IdHabitacionActual) === input.idHabitacionOrigen && String(row.EstadoEstancia) === "ACTIVA");
+    if (!stay) throw new Error("No se encontró una estancia activa en la habitación de origen.");
+    const shift = requireOpenShiftForUser_(user);
+    const changedAt = now_();
+    const oldCycleId = String(origin.IdCicloActual);
+    const newCycleId = newId_("CIC");
+    appendRow_(FEMA_CONFIG.sheets.cycles, {
+      IdCiclo: newCycleId, IdMotel: user.idMotel, IdHabitacion: input.idHabitacionDestino,
+      TipoInicio: "TRASLADO", ComentarioInicio: `Desde habitación ${String(origin.NumeroHabitacion)}`, FechaHoraInicio: changedAt,
+      FechaHoraFin: "", EstadoCiclo: "ABIERTO", IdUsuarioInicio: user.idUsuario, IdTurnoInicio: String(shift.IdTurno)
+    });
+    updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", String(stay.IdEstancia), { IdCiclo: newCycleId, IdHabitacionActual: input.idHabitacionDestino });
+    updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacionOrigen, { EstadoActual: "SUCIA" });
+    updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacionDestino, { EstadoActual: "OCUPADA", IdCicloActual: newCycleId });
+    appendRow_(FEMA_CONFIG.sheets.stayMovements, {
+      IdMovimientoEstancia: newId_("ME"), IdEstancia: String(stay.IdEstancia), TipoMovimiento: "TRASLADO",
+      FechaHora: changedAt, IdHabitacionOrigen: input.idHabitacionOrigen, IdHabitacionDestino: input.idHabitacionDestino,
+      MinutosAgregados: 0, MontoAjuste: 0, Comentario: "Cambio de habitación", IdUsuario: user.idUsuario
+    });
+    appendRow_(FEMA_CONFIG.sheets.roomEvents, {
+      IdEvento: newId_("EVT"), IdCiclo: oldCycleId, IdHabitacion: input.idHabitacionOrigen, EstadoAnterior: "OCUPADA",
+      EstadoNuevo: "SUCIA", FechaHora: changedAt, IdEmpleado: user.idUsuario, Comentario: `Traslado a habitación ${String(destination.NumeroHabitacion)}`, IdTurno: String(shift.IdTurno)
+    });
+    appendRow_(FEMA_CONFIG.sheets.roomEvents, {
+      IdEvento: newId_("EVT"), IdCiclo: newCycleId, IdHabitacion: input.idHabitacionDestino, EstadoAnterior: "DISPONIBLE",
+      EstadoNuevo: "OCUPADA", FechaHora: changedAt, IdEmpleado: user.idUsuario, Comentario: `Traslado desde habitación ${String(origin.NumeroHabitacion)}`, IdTurno: String(shift.IdTurno)
+    });
+    writeAudit_(user, "CAMBIAR_HABITACION", "ESTANCIA", String(stay.IdEstancia), { origin, stay }, { idHabitacionDestino: input.idHabitacionDestino, newCycleId }, input.idempotencyKey);
+    return { idEstancia: String(stay.IdEstancia), idHabitacionOrigen: input.idHabitacionOrigen, idHabitacionDestino: input.idHabitacionDestino };
+  });
+}
+
+function cancelOccupiedStay_(user: FemaUser, input: CancelStayInput): CancelStayResult {
+  assertPermission_(user, "PER-HAB-GEST");
+  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
+  const comment = String(input.comentario ?? "").trim();
+  if (!comment) throw new Error("Escribe el motivo de la cancelación.");
+  if (comment.length > 300) throw new Error("El motivo no puede superar 300 caracteres.");
+  return withScriptLock_(() => {
+    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+    const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
+    if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel || String(room.EstadoActual) !== "OCUPADA" || !room.IdCicloActual) throw new Error("La habitación ya no está ocupada.");
+    const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === String(room.IdCicloActual) && String(row.IdHabitacionActual) === input.idHabitacion && String(row.EstadoEstancia) === "ACTIVA");
+    if (!stay) throw new Error("No se encontró una estancia activa para cancelar.");
+    const shift = requireOpenShiftForUser_(user);
+    const cancelledAt = now_();
+    const originalPrice = Number(stay.PrecioFinal) || 0;
+    updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", String(stay.IdEstancia), {
+      FechaHoraSalidaReal: cancelledAt, AjustePrecio: (Number(stay.AjustePrecio) || 0) - originalPrice,
+      PrecioFinal: 0, MotivoAjuste: `CANCELACION: ${comment}`, EstadoEstancia: "CANCELADA"
+    });
+    readRows_(FEMA_CONFIG.sheets.payments)
+      .filter((row) => !isExampleRow_(row) && String(row.IdEstancia) === String(stay.IdEstancia) && String(row.Estado) === "APLICADO")
+      .forEach((payment) => updateRowById_(FEMA_CONFIG.sheets.payments, "IdPago", String(payment.IdPago), { Estado: "CANCELADO" }));
+    appendRow_(FEMA_CONFIG.sheets.stayMovements, {
+      IdMovimientoEstancia: newId_("ME"), IdEstancia: String(stay.IdEstancia), TipoMovimiento: "CANCELACION",
+      FechaHora: cancelledAt, IdHabitacionOrigen: input.idHabitacion, IdHabitacionDestino: "",
+      MinutosAgregados: 0, MontoAjuste: -originalPrice, Comentario: comment, IdUsuario: user.idUsuario
+    });
+    appendRow_(FEMA_CONFIG.sheets.roomEvents, {
+      IdEvento: newId_("EVT"), IdCiclo: String(room.IdCicloActual), IdHabitacion: input.idHabitacion,
+      EstadoAnterior: "OCUPADA", EstadoNuevo: "SUCIA", FechaHora: cancelledAt, IdEmpleado: user.idUsuario,
+      Comentario: "Estancia cancelada", IdTurno: String(shift.IdTurno)
+    });
+    updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "SUCIA" });
+    writeAudit_(user, "CANCELAR_ESTANCIA", "ESTANCIA", String(stay.IdEstancia), stay, { PrecioFinal: 0, EstadoEstancia: "CANCELADA", EstadoHabitacion: "SUCIA" }, input.idempotencyKey);
+    return { idEstancia: String(stay.IdEstancia), estadoHabitacion: "SUCIA", precioFinal: 0 };
+  });
+}
+
+function undoRoomState_(user: FemaUser, input: UndoRoomStateInput): UndoRoomStateResult {
+  assertPermission_(user, "PER-HAB-GEST");
+  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
+  return withScriptLock_(() => {
+    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+    const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
+    if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel || !room.IdCicloActual) throw new Error("Habitación no encontrada o sin ciclo activo.");
+    const state = String(room.EstadoActual);
+    if (!["SUCIA", "LIMPIEZA"].includes(state)) throw new Error("Solo se puede deshacer una habitación SUCIA o en LIMPIEZA.");
+    const shift = requireOpenShiftForUser_(user);
+    const changedAt = now_();
+    const cycleId = String(room.IdCicloActual);
+    if (state === "LIMPIEZA") {
+      const cleaning = readRows_(FEMA_CONFIG.sheets.cleanings).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === cycleId && String(row.IdHabitacion) === input.idHabitacion && ["ASIGNADA", "EN_PROCESO"].includes(String(row.Estado)));
+      if (!cleaning) throw new Error("No se encontró la limpieza activa que se debe deshacer.");
+      updateRowById_(FEMA_CONFIG.sheets.cleanings, "IdLimpieza", String(cleaning.IdLimpieza), { Estado: "CANCELADA", FechaHoraFin: changedAt, IdUsuarioFinaliza: user.idUsuario });
+      updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "SUCIA" });
+      appendRow_(FEMA_CONFIG.sheets.roomEvents, { IdEvento: newId_("EVT"), IdCiclo: cycleId, IdHabitacion: input.idHabitacion, EstadoAnterior: "LIMPIEZA", EstadoNuevo: "SUCIA", FechaHora: changedAt, IdEmpleado: user.idUsuario, Comentario: "Corrección de estado", IdTurno: String(shift.IdTurno) });
+      writeAudit_(user, "CORREGIR_ESTADO", "HABITACION", input.idHabitacion, room, { EstadoActual: "SUCIA", limpiezaCancelada: String(cleaning.IdLimpieza) }, input.idempotencyKey, "LOG_ERRORES");
+      return { idHabitacion: input.idHabitacion, estadoHabitacion: "SUCIA" };
+    }
+    const transfer = readRows_(FEMA_CONFIG.sheets.stayMovements).filter((row) => !isExampleRow_(row) && String(row.TipoMovimiento) === "TRASLADO" && String(row.IdHabitacionOrigen) === input.idHabitacion).pop();
+    if (transfer) {
+      const transferredStay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdEstancia) === String(transfer.IdEstancia) && String(row.IdHabitacionActual) === String(transfer.IdHabitacionDestino) && String(row.EstadoEstancia) === "ACTIVA");
+      const destination = transferredStay ? findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", String(transfer.IdHabitacionDestino)) : null;
+      if (transferredStay && destination && String(destination.EstadoActual) === "OCUPADA" && String(destination.IdCicloActual) === String(transferredStay.IdCiclo)) {
+        const destinationCycleId = String(transferredStay.IdCiclo);
+        updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", String(transferredStay.IdEstancia), { IdCiclo: cycleId, IdHabitacionActual: input.idHabitacion });
+        updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", String(destination.IdHabitacion), { EstadoActual: "DISPONIBLE", IdCicloActual: "" });
+        updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "OCUPADA" });
+        updateRowById_(FEMA_CONFIG.sheets.cycles, "IdCiclo", destinationCycleId, { EstadoCiclo: "CERRADO", FechaHoraFin: changedAt });
+        appendRow_(FEMA_CONFIG.sheets.stayMovements, { IdMovimientoEstancia: newId_("ME"), IdEstancia: String(transferredStay.IdEstancia), TipoMovimiento: "REVERSA_TRASLADO", FechaHora: changedAt, IdHabitacionOrigen: String(destination.IdHabitacion), IdHabitacionDestino: input.idHabitacion, MinutosAgregados: 0, MontoAjuste: 0, Comentario: "Corrección de estado", IdUsuario: user.idUsuario });
+        appendRow_(FEMA_CONFIG.sheets.roomEvents, { IdEvento: newId_("EVT"), IdCiclo: cycleId, IdHabitacion: input.idHabitacion, EstadoAnterior: "SUCIA", EstadoNuevo: "OCUPADA", FechaHora: changedAt, IdEmpleado: user.idUsuario, Comentario: "Corrección de traslado", IdTurno: String(shift.IdTurno) });
+        appendRow_(FEMA_CONFIG.sheets.roomEvents, { IdEvento: newId_("EVT"), IdCiclo: destinationCycleId, IdHabitacion: String(destination.IdHabitacion), EstadoAnterior: "OCUPADA", EstadoNuevo: "DISPONIBLE", FechaHora: changedAt, IdEmpleado: user.idUsuario, Comentario: "Corrección de traslado", IdTurno: String(shift.IdTurno) });
+        writeAudit_(user, "CORREGIR_TRASLADO", "HABITACION", input.idHabitacion, { room, destination }, { EstadoActual: "OCUPADA", destinoRestaurado: "DISPONIBLE" }, input.idempotencyKey, "LOG_ERRORES");
+        return { idHabitacion: input.idHabitacion, estadoHabitacion: "OCUPADA" };
+      }
+    }
+    const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === cycleId && String(row.IdHabitacionActual) === input.idHabitacion && ["FINALIZADA", "CANCELADA"].includes(String(row.EstadoEstancia)));
+    if (!stay) throw new Error("No se encontró una salida o cancelación que se pueda deshacer.");
+    const wasCancelled = String(stay.EstadoEstancia) === "CANCELADA";
+    let restoredPrice = Number(stay.PrecioFinal) || 0;
+    if (wasCancelled) {
+      const cancellation = readRows_(FEMA_CONFIG.sheets.stayMovements).filter((row) => !isExampleRow_(row) && String(row.IdEstancia) === String(stay.IdEstancia) && String(row.TipoMovimiento) === "CANCELACION").pop();
+      restoredPrice = cancellation ? Math.abs(Number(cancellation.MontoAjuste) || 0) : Number(stay.PrecioCatalogo) || 0;
+      readRows_(FEMA_CONFIG.sheets.payments).filter((row) => !isExampleRow_(row) && String(row.IdEstancia) === String(stay.IdEstancia) && String(row.Estado) === "CANCELADO").forEach((payment) => updateRowById_(FEMA_CONFIG.sheets.payments, "IdPago", String(payment.IdPago), { Estado: "APLICADO" }));
+    }
+    updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", String(stay.IdEstancia), {
+      FechaHoraSalidaReal: "", EstadoEstancia: "ACTIVA", PrecioFinal: restoredPrice,
+      AjustePrecio: restoredPrice - (Number(stay.PrecioCatalogo) || 0), MotivoAjuste: Number(stay.PersonasExtra) > 0 ? "PERSONAS_EXTRA" : ""
+    });
+    appendRow_(FEMA_CONFIG.sheets.stayMovements, { IdMovimientoEstancia: newId_("ME"), IdEstancia: String(stay.IdEstancia), TipoMovimiento: wasCancelled ? "REVERSA_CANCELACION" : "REVERSA_SALIDA", FechaHora: changedAt, IdHabitacionOrigen: input.idHabitacion, IdHabitacionDestino: input.idHabitacion, MinutosAgregados: 0, MontoAjuste: wasCancelled ? restoredPrice : 0, Comentario: "Corrección de estado", IdUsuario: user.idUsuario });
+    updateRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion, { EstadoActual: "OCUPADA" });
+    appendRow_(FEMA_CONFIG.sheets.roomEvents, { IdEvento: newId_("EVT"), IdCiclo: cycleId, IdHabitacion: input.idHabitacion, EstadoAnterior: "SUCIA", EstadoNuevo: "OCUPADA", FechaHora: changedAt, IdEmpleado: user.idUsuario, Comentario: "Corrección de estado", IdTurno: String(shift.IdTurno) });
+    writeAudit_(user, "CORREGIR_ESTADO", "HABITACION", input.idHabitacion, room, { EstadoActual: "OCUPADA", estanciaRestaurada: String(stay.IdEstancia) }, input.idempotencyKey, "LOG_ERRORES");
+    return { idHabitacion: input.idHabitacion, estadoHabitacion: "OCUPADA" };
+  });
 }
 
 function registerExit_(user: FemaUser, input: ExitInput): ExitResult {

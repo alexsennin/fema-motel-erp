@@ -2,7 +2,7 @@ type CellValue = string | number | boolean | Date | null;
 type SheetRow = Record<string, CellValue>;
 
 type RoomStatus = "DISPONIBLE" | "OCUPADA" | "SUCIA" | "LIMPIEZA" | "MANTENIMIENTO";
-type CycleStartType = "OCUPADA" | "LIMPIEZA" | "MANTENIMIENTO";
+type CycleStartType = "OCUPADA" | "TRASLADO" | "LIMPIEZA" | "MANTENIMIENTO";
 
 interface FemaUser {
   idUsuario: string;
@@ -122,6 +122,40 @@ interface ExitResult {
   idEstancia: string;
   fechaHoraSalidaReal: string;
   estadoHabitacion: "SUCIA";
+}
+
+interface TransferRoomInput {
+  idHabitacionOrigen: string;
+  idHabitacionDestino: string;
+  idempotencyKey: string;
+}
+
+interface TransferRoomResult {
+  idEstancia: string;
+  idHabitacionOrigen: string;
+  idHabitacionDestino: string;
+}
+
+interface CancelStayInput {
+  idHabitacion: string;
+  comentario: string;
+  idempotencyKey: string;
+}
+
+interface CancelStayResult {
+  idEstancia: string;
+  estadoHabitacion: "SUCIA";
+  precioFinal: 0;
+}
+
+interface UndoRoomStateInput {
+  idHabitacion: string;
+  idempotencyKey: string;
+}
+
+interface UndoRoomStateResult {
+  idHabitacion: string;
+  estadoHabitacion: "OCUPADA" | "SUCIA";
 }
 
 interface CleaningAssignmentInput {
