@@ -22,6 +22,21 @@ npx clasp create-script --type standalone --title "FEMA · Apps Script" --rootDi
 npm run clasp:push
 ```
 
+### Emulador local con Docker
+
+Para desarrollar y ejecutar una prueba de humo aislada, sin leer ni escribir la hoja real:
+
+```bash
+npm run dev:docker
+npm run test:docker
+npm run dev:docker:logs
+npm run dev:docker:stop
+```
+
+La app local queda en `http://localhost:8787`. Usa fixtures efímeros en memoria, una identidad ficticia `dev@example.test` y un puente local compatible con las llamadas `google.script.run` usadas por la UI. No contiene credenciales Google ni importa datos de producción. El contenedor compila el TypeScript fuente al arrancar; vuelve a ejecutar `npm run dev:docker` tras cambiar código para reconstruir y reiniciar.
+
+La prueba de humo usa un emulador de `SpreadsheetApp`, `Session`, `Utilities` y `LockService`; no es el runtime real de Google ni una prueba visual E2E de navegador. Un reinicio vuelve a sembrar las fixtures. El `npm ci` de la imagen reportó 11 avisos de auditoría de dependencias (7 moderados y 4 altos); quedan por revisar en una tarea aparte y no se actualizaron dependencias aquí.
+
 El proyecto independiente de Apps Script vive dentro de la carpeta `FEMA` en
 Google Drive y abre la fuente maestra mediante su ID. `clasp create-script`
 crea `.clasp.json`; ese archivo y `~/.clasprc.json` contienen identificadores o
@@ -39,6 +54,14 @@ El workflow manual `Deploy Apps Script` requiere dos secretos del environment `p
 - `CLASP_JSON`: contenido de `.clasp.json`.
 
 El workflow compila, sube `dist/` mediante `clasp` y crea una versión inmutable. La primera implementación como Web App se configura una vez en Apps Script; las actualizaciones posteriores conservan el mismo enlace.
+
+## URL de acceso FEMA
+
+`vercel-entrypoint/` contiene un proyecto Vercel separado del build de Apps Script. Su redirección temporal lleva `https://fema.integratech.app` al deployment estable `/exec` de Apps Script. La autenticación sigue ocurriendo en Google y, después de redirigir, el navegador mostrará el dominio de Google; Vercel sólo proporciona una dirección fácil de recordar, no un proxy ni un dominio personalizado nativo de Apps Script.
+
+El proyecto Vercel `fema-motel-link` ya tiene asignado `fema.integratech.app`. Su publicación actual se hizo con Vercel CLI. El intento de conectar GitHub falló porque la integración de Vercel no tiene acceso al repositorio privado; hasta autorizar esa integración, los cambios de `vercel-entrypoint/` requieren un despliegue manual desde esa carpeta. No se debe cambiar la visibilidad del repositorio.
+
+Para actualizar manualmente la entrada, primero verifica el contenido de `vercel-entrypoint/vercel.json` y luego ejecuta `npx vercel --cwd vercel-entrypoint` para preview o `npx vercel --prod --cwd vercel-entrypoint --scope alex-sennin` para producción. Ese deploy sólo modifica el redirect Vercel: no sube ni despliega código Apps Script.
 
 ## Estructura
 

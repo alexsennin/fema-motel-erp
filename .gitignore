@@ -4,6 +4,7 @@ coverage/
 .clasp*.json
 !.clasp.example.json
 .clasprc.json
+.vercel/
 .env
 .env.*
 !.env.example

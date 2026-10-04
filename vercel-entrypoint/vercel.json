@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://script.google.com/macros/s/AKfycby7DLyTqq84WHrAf3ajNjNE-4xeWNTvfCHE8OP7U7LP1UoG6GU7Xj20qAFX4rY9Wpv3eQ/exec",
+      "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://script.google.com/macros/s/AKfycby7DLyTqq84WHrAf3ajNjNE-4xeWNTvfCHE8OP7U7LP1UoG6GU7Xj20qAFX4rY9Wpv3eQ/exec",
+      "permanent": false
+    }
+  ]
+}

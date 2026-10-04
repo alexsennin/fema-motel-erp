@@ -8,7 +8,11 @@
     "typecheck": "tsc --noEmit",
     "clasp:status": "clasp status",
     "clasp:push": "npm run build && clasp push",
-    "clasp:deploy": "npm run build && clasp push && clasp create-deployment --description"
+    "clasp:deploy": "npm run build && clasp push && clasp create-deployment --description",
+    "dev:docker": "docker compose up --build --force-recreate -d",
+    "dev:docker:logs": "docker compose logs -f fema-local",
+    "dev:docker:stop": "docker compose down",
+    "test:docker": "docker compose exec -T fema-local node local/smoke.mjs"
   },
   "devDependencies": {
     "@google/clasp": "3.3.0",
