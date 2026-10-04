@@ -63,3 +63,15 @@ docs/github-actions/  Plantillas de validación y despliegue
 La aplicación incluye el mapa de habitaciones, el servicio inicial para registrar entradas y el ABC de los catálogos de hoteles, personal de recepción, personal de limpieza, tipos de habitación y habitaciones. Las bajas son lógicas y cada modificación queda registrada en `Bitacora`.
 
 El acceso a catálogos requiere `PER-CAT-GEST`. El personal de recepción utiliza el rol `ROL-RECEPCION`; una persona puede existir en el catálogo sin correo, pero necesita una cuenta de Google registrada para iniciar sesión.
+
+## Documentación para desarrollo
+
+Este repositorio adopta **ALEX DEVELOPMENT STANDARD v1.0** como metodología de trabajo. La documentación describe FEMA y no copia los documentos canónicos del estándar.
+
+- [Reglas para agentes](AGENTS.md)
+- [Contexto del proyecto](PROJECT_CONTEXT.md)
+- [Estado actual y siguiente paso](PROJECT_STATE.md)
+- [Arquitectura actual y objetivo](ARCHITECTURE.md)
+- [Trabajo pendiente](TODO.md)
+- [Decisiones](DECISIONS.md)
+- [Sistema visual observado](DESIGN_SYSTEM.md), [tokens](TOKENS.md), [componentes](COMPONENTS.md) y [layouts](LAYOUTS.md)
