@@ -1,78 +1,144 @@
-# FEMA · Análisis del control de habitaciones legado
+# FEMA · Análisis funcional del sistema y pendientes
 
-Fecha de revisión: 4 de octubre de 2026  
-Fuente legada: [DREAMS2025 · DASHBOARD](https://docs.google.com/spreadsheets/d/10ujsmBHqalnG_HxbiuVrhp4uDDuYHNRwDVm5FjY5X18/edit?gid=240854263#gid=240854263)  
-Repositorio revisado: `alexsennin/fema-motel-erp`, rama `codex/fema-vercel-docker-env`, HEAD `71d137cf362cbcb59b770bafd7fbf2185cbc11b2`.
+Fecha de revisión del código: 4 de octubre de 2026
 
-## Alcance y límites
+Repositorio: `alexsennin/fema-motel-erp` · Rama: `codex/fema-vercel-docker-env` · HEAD al iniciar la revisión: `36ea97b`
 
-Se revisaron en modo lectura los metadatos del libro, `DASHBOARD!A1:Z30` y `QUERY!A1:G40`, además del código de FEMA relacionado con habitaciones, rentas, limpieza, movimientos y turnos. No se modificó Google Sheets ni se examinó el Apps Script legado asociado al libro, formularios, pestañas fuera de las dos consultadas o rangos de `QUERY` posteriores a la fila 40. Por tanto, este análisis describe lo visible y verificable, no certifica la totalidad del proceso legado ni reconcilia sus datos con FEMA.
+Fuente legada contrastada: [DREAMS2025 · DASHBOARD](https://docs.google.com/spreadsheets/d/10ujsmBHqalnG_HxbiuVrhp4uDDuYHNRwDVm5FjY5X18/edit?gid=240854263#gid=240854263)
 
-## Qué hace hoy el control legado
+## Alcance y límites de verificación
 
-El libro `DREAMS2025` tiene la pestaña `DASHBOARD` (gid `240854263`) y la pestaña `QUERY`. El tablero organiza las habitaciones en tres bloques: 1–11, 12–22 y 23–31; en total presenta 31 habitaciones. Por habitación muestra tipo/modelo, costo, número, estado, importe, entrada, permanencia, salida y tiempo restante.
+Se revisó el código versionado de Apps Script, la interfaz HTML, el esquema de hojas declarado, el emulador Docker y su prueba de humo. No se cambió lógica, no se escribió en Sheets y no se ejecutó `clasp pull`. Por ello, el documento explica lo que hace el código fuente de esta rama; no certifica que el deployment productivo ni las hojas reales estén sincronizados con él.
 
-El tablero deriva el estado y otros datos con fórmulas `VLOOKUP` que consultan `QUERY`; usa `NOW()` para calcular el tiempo restante. `QUERY!A:G` presenta una fila resumida por habitación con habitación, estado actual, fecha del último estado, hora de registro, horas de renta, indicador de limpieza y costo. En la lectura del 4 de octubre de 2026 se veían ocupadas las habitaciones 6–10 y 23; las demás aparecían disponibles.
+De la hoja legado se consultaron metadatos, `DASHBOARD!A1:Z30` y `QUERY!A1:G40`. No se inspeccionaron el script que opera esa hoja, sus formularios, otros tabs ni el contenido completo de `QUERY`.
 
-Los tipos y precios visibles incluyen Sencilla ($430), Suite Confort ($1,500), Gran Suite Confort ($2,400), Junior Suite ($580), Master Suite ($650) y Contenedor 1/2 ($430). Son importes de la muestra observada y no una confirmación de vigencia comercial.
+## Arquitectura actual
 
-En la fila superior del tablero aparecen las etiquetas `REGISTRO`, `CORTE CAJA` y `CONSUMOS`. Con las pestañas y rangos consultados no se puede determinar cómo funcionan esas áreas ni qué otros datos de operación conservan.
+- **Interfaz:** `src/client/Index.html`, una aplicación HTML/JavaScript que se sirve con `HtmlService` y llama funciones de servidor mediante `google.script.run`.
+- **Servidor:** TypeScript bajo `src/server/`, compilado por `scripts/build.mjs` a `dist/` para Apps Script/clasp.
+- **Persistencia:** una hoja maestra de Google Sheets. `src/server/00_Config.ts` declara pestañas y `src/server/02_SheetRepository.ts` convierte filas a objetos usando encabezado en la fila 4 y datos desde la 5.
+- **Desarrollo local:** Docker ofrece un emulador de `SpreadsheetApp`, `Session`, `Utilities` y `LockService` con fixtures; no es el runtime productivo de Google.
+- **Protección de operaciones:** validación de usuario/permiso, `LockService` global y clave de idempotencia revisada contra `Bitacora` para operaciones sensibles.
 
-## Contraste con FEMA actual
+La persistencia actual actualiza celdas/filas en distintas llamadas. El bloqueo evita concurrencia simultánea entre ejecuciones del script, pero no convierte una secuencia de escrituras sobre varias pestañas en una transacción con rollback automático.
 
-FEMA conserva Sheets + Apps Script como arquitectura: el código fuente se administra en GitHub, la interfaz es una Web App y los datos operativos se leen de un libro maestro separado. El modelo actual identifica motel, habitación, tipo, tarifa, turno, ciclo, estancia, limpieza, eventos, movimientos, pagos y bitácora mediante IDs.
+## Qué hace el sistema por módulo y acción
 
-| Capacidad | Hoja legada observada | FEMA actual verificado |
-|---|---|---|
-| Vista de habitaciones | Tablero fijo de 31 habitaciones en celdas y fórmulas | Mapa dinámico de habitaciones activas del motel del usuario |
-| Estado | `DISPONIBLE`/`OCUPADA` visible; resumen de estado en `QUERY` | `DISPONIBLE`, `OCUPADA`, `SUCIA`, `LIMPIEZA` y `MANTENIMIENTO` en catálogo y ciclo |
-| Registrar renta | El tablero muestra entrada, duración, salida y costo calculados desde `QUERY` | Alta de estancia vinculada a tarifa, habitación, usuario y turno abierto; guarda importe, pago, entrada y salida prevista |
-| Registrar salida | Se muestra hora de salida calculada mientras está ocupada | Finaliza la estancia, registra evento y usuario, cambia a `SUCIA` |
-| Limpieza | `QUERY` reserva columnas para indicador de limpieza y costo; el flujo completo no queda probado con lo consultado | Asignación de personal del mismo motel y turno horario; inicio/finalización, duración y cambio a `DISPONIBLE` |
-| Tipos/tarifas | Precios visibles dentro del tablero por habitación | Catálogos separados de tipos, tarifas y habitaciones; las entradas requieren tarifa activa |
-| Cambio/cancelación/edición | No se observan en las columnas consultadas | Cambio de habitación, cancelación con motivo e importe cero, agregar persona extra y editar renta con observación obligatoria |
-| Reporte por turno | Etiqueta `CORTE CAJA`, pero no se examinó su contenido | Reporte de rentas ligado al turno abierto con renta, desocupación y limpieza |
-| Auditoría y autoría | No aparecen IDs de usuario/recepcionista en `QUERY!A:G` | Los eventos y movimientos registran usuario/empleado y turno; cambios sensibles dejan bitácora |
+### 1. Entrada Web App y autenticación
 
-La hoja legada favorece la lectura rápida de ocupación y tiempo restante. FEMA reemplaza esa cuadrícula fija con datos operativos identificados y transiciones auditables. El tablero legado no debe tratarse como una especificación completa de procesos ni como fuente automática de tarifas actuales.
+`doGet()` entrega la página FEMA. Antes de devolver cada estado o ejecutar cada API, `getCurrentUser_()` toma el correo de `Session.getActiveUser()`, busca un usuario activo con ese correo en `Usuarios` y obtiene su motel/rol. No existe en este código un acceso por usuario y contraseña ni emisión/validación de credenciales propias.
 
-## Pendientes y mejoras propuestas
+`assertPermission_()` comprueba permisos por rol desde `RolPermisos`. Las respuestas del servidor usan `{ok,data}` o `{ok:false,error}`. La bitácora registra acción, entidad, usuario, motel, fecha, datos antes/después y motivo.
 
-### P0 · Antes de usar FEMA como reemplazo operativo
+### 2. Catálogos
 
-1. **Conciliar el catálogo real de habitaciones y tarifas.** Comparar las habitaciones 1–31 y sus tipos/precios legados con los catálogos de FEMA para Dreams. Resolver explícitamente diferencias, habitaciones faltantes/inactivas y vigencia de precios. No importar automáticamente los valores observados en el tablero.
-   - Criterio de cierre: tabla de conciliación aprobada por el responsable del motel, con número, tipo, tarifa vigente y estado inicial; respaldo de la fuente antes de cargar.
-2. **Validar el recorrido completo en el entorno local y luego con usuarios autorizados en la Web App.** La prueba Docker es un emulador con fixtures, no verifica acceso ni persistencia reales en Apps Script/Sheets.
-   - Criterio de cierre: pruebas documentadas de entrada, salida, cambio, cancelación, asignación/finalización de limpieza y reporte; evidencia separada de prueba local y recorrido real.
+La vista de catálogos permite altas, edición y baja/reactivación lógica de:
 
-### P1 · Consistencia del reporte y del historial de la renta
+- **Hoteles:** nombre y zona horaria. Al dar de alta un hotel se crean también los turnos de limpieza matutino y vespertino predeterminados. No se permite darlo de baja si conserva habitaciones o usuarios activos.
+- **Personal de recepción:** nombre, apellidos, motel y correo opcional. Se crea en rol `ROL-RECEPCION`; el correo opcional no sustituye el requisito de Google para autenticarse.
+- **Personal de limpieza:** nombre, motel y turno habitual (`MATUTINO` o `VESPERTINO`).
+- **Turnos de limpieza:** hora de inicio/fin por motel; valida formato, evita inicio y fin iguales y no permite traslapar horarios activos.
+- **Tipos de habitación:** nombre, motel y precio unitario de persona extra.
+- **Tarifas:** tipo, nombre, duración en minutos, precio base, personas incluidas y vigencia inicial/final. Evita duplicar una tarifa por duración del tipo.
+- **Habitaciones:** número, motel, tipo y puntos de limpieza. Sólo se pueden editar o dar de baja si están disponibles y sin ciclo activo.
 
-3. **Definir qué habitación y limpieza debe mostrar una renta que tuvo cambio de habitación.** En el código actual, el traslado actualiza la estancia a un nuevo ciclo/habitación, mientras la limpieza de la habitación de origen queda asociada al ciclo anterior. El reporte consulta la limpieza por el ciclo actual de la estancia; por ello puede no presentar la limpieza del cuarto que quedó sucio tras el traslado. Además, la fila presenta una sola habitación. Acordar si el reporte mostrará habitación de entrada, habitación final o todos los traslados y cómo representará la limpieza de cada habitación.
-   - Criterio de cierre: un caso de prueba con traslado muestra trazabilidad de estancia y limpieza de origen/destino según la regla aprobada, sin duplicar ingresos.
-4. **Acordar la semántica del corte de turno.** El reporte actual se filtra por el `IdTurno` guardado en cada estancia y muestra las rentas capturadas en ese turno, incluso si ya terminaron; una cancelación permanece con importe cero. Confirmar que esto coincide con el corte esperado y definir explícitamente cómo tratar traslados, cancelaciones y ediciones.
-   - Criterio de cierre: ejemplos de turno con renta abierta, salida, cancelación, ajuste y traslado producen totales y estados aceptados por operación.
-5. **Separar importe de la estancia de monto efectivamente cobrado.** La edición de la estancia actualiza el importe y también ajusta los registros de pago aplicados al nuevo importe. Antes de ampliar cobros, definir si `Pagos.Monto` representa lo pagado realmente o el importe de la renta y cómo se registran diferencias, pagos parciales o múltiples.
-   - Criterio de cierre: regla contable aprobada y pruebas que demuestren que editar/cancelar no falsea el monto recibido ni el corte.
+Las altas, cambios, bajas y reactivaciones generan registros de auditoría. `listCatalogs_()` entrega los catálogos al usuario con permiso `PER-CAT-GEST`.
 
-### P2 · Usabilidad y continuidad operativa
+### 3. Mapa operativo de habitaciones
 
-6. **Incorporar una vista compacta del tiempo transcurrido/restante y la hora de salida prevista en las tarjetas.** El tablero legado hace visible ese dato continuamente con `NOW()`. FEMA guarda la hora prevista y la entrada en la tarjeta, pero no se verificó una cuenta regresiva viva equivalente.
-   - Criterio de cierre: la recepción distingue de un vistazo ocupación y vencimiento, con zona horaria del motel y sin alterar datos de la estancia.
-7. **Mantener el reporte de turno como consulta principal, sin agregar historial individual en cada tarjeta.** La tabla actual cubre renta, desocupación y limpieza. Dejar fuera del alcance por ahora la navegación de historial por habitación, salvo que una necesidad de auditoría lo requiera después.
-8. **Verificar paridad visual y accesibilidad operativa.** Confirmar en móvil/escritorio que todos los cuartos están localizables, que las acciones dependen del estado correcto y que un usuario con turno cerrado puede consultar, pero no operar.
+`apiGetInitialState()` entrega las habitaciones activas del motel asociado al usuario, sus tarifas vigentes, turnos/personal de limpieza disponible y estado del turno. Las tarjetas muestran habitación, tipo, estado, tarifa inicial o aviso de tarifa pendiente; para habitaciones ocupadas muestran salida prevista y placas; para sucias, puntos de limpieza y disponibilidad de personal; para limpieza, personal asignado e inicio.
 
-## Riesgos, decisiones y siguientes pasos
+Estados representados por los tipos y la interfaz: `DISPONIBLE`, `OCUPADA`, `SUCIA`, `LIMPIEZA` y `MANTENIMIENTO`. No hay flujo/API para iniciar o cerrar mantenimiento; una habitación sólo puede mostrarse con ese estado si su dato ya existe en Sheets.
 
-- **Riesgo de datos:** la hoja legada refleja ocupaciones y tarifas en tiempo real, mientras FEMA usa otra hoja maestra. No hay reconciliación de datos en esta tarea; ambas fuentes podrían divergir.
-- **Riesgo de alcance:** no se comprobó el flujo detrás de `REGISTRO`, `CORTE CAJA`, `CONSUMOS` ni los registros completos en la pestaña `QUERY`.
-- **Decisión recomendada:** tratar el tablero como referencia de operación y paridad, no como fuente para importar precios ni como definición completa de corte/reportes.
-- **Siguiente paso recomendado:** completar conciliación de habitaciones/tarifas con el usuario y resolver primero las decisiones P1 de traslados y pagos; después convertir los criterios anteriores en pruebas de aceptación antes de tocar datos reales.
+### 4. Turnos de recepción
 
-## Fuente de implementación FEMA
+- **Abrir turno:** crea un registro `ABIERTO` si el motel no tiene otro abierto. No inicializa ni cambia estados de habitaciones.
+- **Operar:** el código sólo permite operar a quien abrió el turno. Las otras personas pueden consultar el estado, pero no operar mientras ese turno siga abierto.
+- **Cerrar turno:** cambia el registro a `CERRADO` y conserva el resto de la información. No hay cierre de caja ni conciliación de efectivo en este flujo.
+- **Consultar turno cerrado:** la interfaz muestra metadatos de cierres recientes, pero el reporte de rentas se vacía/oculta cuando ya no hay turno abierto. No hay selector ni consulta de un turno cerrado.
 
-- `README.md`
-- `src/server/00_Config.ts`
-- `src/server/04_RoomService.ts`
-- `src/server/07_ShiftService.ts`
-- `src/client/Index.html`
-- `package.json` (pruebas Docker/mock disponibles)
+### 5. Registrar entrada y renta
+
+En una habitación disponible, el usuario elige tarifa vigente del tipo correspondiente, personas extra, forma de pago (efectivo, tarjeta o transferencia) y opcionalmente vehículo/placas. El servidor vuelve a validar disponibilidad, motel, vigencia de tarifa y turno abierto.
+
+La operación calcula precio base más personas extra; crea ciclo, estancia, evento `DISPONIBLE → OCUPADA` y pago; actualiza el estado/ciclo actual de la habitación y registra auditoría. La salida prevista se calcula usando los minutos de la tarifa.
+
+### 6. Registrar salida
+
+En una habitación ocupada se finaliza la estancia con hora real de salida, agrega evento `OCUPADA → SUCIA`, actualiza el estado de la habitación y deja auditoría. Las observaciones son opcionales.
+
+### 7. Limpieza
+
+- **Disponibilidad de personal:** filtra personal activo del mismo motel, con turno habitual vigente según horarios de limpieza y sin otra limpieza activa. El servidor repite las validaciones al asignar.
+- **Asignar:** sólo desde `SUCIA`; se crea limpieza en proceso con usuario responsable y la habitación pasa a `LIMPIEZA`. No hay campo de observaciones/instrucciones de limpieza.
+- **Finalizar:** marca la limpieza finalizada, calcula minutos, registra el evento `LIMPIEZA → DISPONIBLE`, cierra el ciclo y libera la habitación.
+- **Corregir estado:** deshacer desde `LIMPIEZA` cancela la asignación activa y regresa a `SUCIA`.
+
+### 8. Cambio de habitación, cancelación y edición de renta
+
+- **Cambio de habitación:** mueve la estancia activa a una habitación disponible del mismo motel, abre ciclo para destino, deja la habitación origen `SUCIA` y mantiene el importe. Registra movimiento y eventos para ambos cuartos.
+- **Cancelar renta:** exige motivo, deja la estancia `CANCELADA`, lleva su importe a cero, cancela pagos aplicados y pasa la habitación a `SUCIA`.
+- **Agregar persona extra:** exige cantidad y observación; calcula el cargo usando el precio de persona extra del tipo, suma personas e importe y registra movimiento/auditoría.
+- **Editar renta:** requiere observación; permite cambiar salida prevista, vehículo, placas, personas extra e importe final. Registra el cambio y auditoría.
+- **Corregir/deshacer:** desde `SUCIA` puede revertir una salida/cancelación o un traslado cuando encuentra datos compatibles; las correcciones se auditan con módulo `LOG_ERRORES`. Es una reversa funcional, no un borrado del historial.
+
+### 9. Reporte de rentas
+
+La vista muestra rentas vinculadas por `IdTurno` al turno actualmente abierto: entrada (fecha/hora/habitación/importe/forma de pago), desocupación (estado/fecha/hora), limpieza (fecha/hora/personal/duración) y totales.
+
+El backend incluye estancias canceladas con importe cero. En el reporte, la habitación viene de `IdHabitacionActual`; la limpieza se busca por ciclo de la estancia y se usa una fila por ciclo. Con traslados, la limpieza del ciclo de origen puede quedar fuera de esa fila. La consulta no permite elegir un turno histórico cerrado.
+
+### 10. Módulos declarados pero todavía no funcionales
+
+La configuración declara pestañas `Mantenimientos`, `Cargos`, `Sesiones`, además de pagos, bitácora, ciclos y movimientos. En el código inspeccionado no hay flujo de API/UI para mantenimiento, cargos/consumos, inventario, ventas ni un módulo de corte de caja. Que la hoja o la configuración tengan nombres reservados no significa que el módulo esté construido.
+
+## Contraste resumido con DREAMS2025
+
+La pestaña `DASHBOARD` organiza una cuadrícula fija de 31 habitaciones (1–31) con tipo, costo, estado, importe, entrada, duración, salida y tiempo restante. Fórmulas `VLOOKUP` leen `QUERY`; `NOW()` calcula el tiempo restante. En la lectura del 4 de octubre de 2026 se veían ocupadas las habitaciones 6–10 y 23. Los precios visibles incluían Sencilla ($430), Suite Confort ($1,500), Gran Suite Confort ($2,400), Junior Suite ($580), Master Suite ($650) y Contenedor 1/2 ($430); no se consideran tarifas confirmadas.
+
+FEMA ya representa el flujo de operación con catálogos, estancias, ciclos, eventos, limpieza, pagos y auditoría. A diferencia del tablero legado, no muestra una cuenta regresiva viva. La etiqueta legada `CORTE CAJA` aparece en el tablero, pero su funcionalidad no pudo verificarse. No deben importarse precios ni datos legados sin conciliación aprobada.
+
+## Pendientes y mejoras ajustados al código actual
+
+### P0 · Bloqueos para el uso operativo esperado
+
+1. **Separar la carga de catálogos de la vista operativa.** `loadAll()` inicia `apiGetCatalogs()` y `apiGetInitialState()` con `Promise.all`. Si el usuario no tiene `PER-CAT-GEST`, falla la carga conjunta y el mismo error deja sin mostrar también habitaciones/turno. Un recepcionista debería poder usar habitaciones y reportes con permiso operativo, aunque no gestione catálogos.
+   - Cierre: con usuario sólo operativo, la vista de habitaciones/reporte funciona; catálogos se bloquean con mensaje propio, sin tumbar las demás vistas.
+2. **Alinear autenticación con la regla de usuario/contraseña ya solicitada.** Hoy el backend autentica exclusivamente por correo de la sesión Google; el correo en catálogo es opcional y no se generan usuarios/contraseñas. Diseñar autenticación segura antes de exponer a personal que no iniciará con su Google.
+   - Cierre: flujo y amenaza revisados; contraseñas con hash seguro, sesión revocable, autorización por motel/rol, restablecimiento y pruebas negativas; no guardar contraseñas en texto claro en Sheets.
+3. **Permitir consultar el corte/reporte de un turno cerrado.** La pantalla actual sólo consulta el turno abierto; al cerrar, `renderRentalReport()` dice que no hay turno y no entrega su corte, contrario a la necesidad operativa de conservar consulta sin operación.
+   - Cierre: abrir vista de sólo lectura por turno cerrado, con los mismos datos/totales congelados o reproducibles y controles de operación deshabilitados.
+4. **Conciliar las 31 habitaciones, tipos y tarifas antes de sustituir la hoja legada.** Confirmar diferencias entre DREAMS2025 y el catálogo FEMA real; validar tarifas actuales con responsable. No cargar automáticamente los importes observados.
+   - Cierre: matriz de conciliación aprobada, respaldo y comprobación habitación por habitación.
+
+### P1 · Integridad de rentas, turnos y registros
+
+5. **Resolver trazabilidad de traslado en el reporte.** La renta pasa a apuntar al ciclo/habitación de destino; la limpieza posterior del cuarto de origen está ligada al ciclo anterior. Definir si el reporte enseña cuarto de entrada, cuarto final o todos los traslados y la limpieza correspondiente de cada uno.
+6. **Corregir/separar monto cobrado de precio final.** En edición, el código actualiza el monto de cada pago `APLICADO` al nuevo precio final. Si existen varios pagos, cada uno puede acabar reflejando el total; si hubo descuento/ajuste, se pierde la representación del cobro real. Cancelar/reactivar también cambia estados de pagos existentes. Definir cargos, pagos parciales, ajustes, devoluciones y corte antes de ampliar esta lógica.
+7. **Revisar el alcance de reversas y la consistencia de escrituras multihoja.** Las reversas seleccionan movimientos históricos por habitación y deben probarse con varias estancias/traslados sucesivos. Las operaciones escriben secuencialmente en varias pestañas bajo lock, pero un error intermedio no tiene rollback automático.
+8. **Aclarar alcance de turnos y autorización entre recepcionistas.** Una sola persona puede operar: el turno pertenece al usuario que lo abrió. Confirmar si el relevo esperado requiere que el titular cierre antes de que otro abra, mientras ambos puedan consultar el corte anterior.
+9. **Ejecutar pruebas de aceptación amplias.** La prueba Docker visible recorre abrir turno → entrada → reporte → salida → asignar/finalizar limpieza → cerrar turno. No cubre catálogos, autenticación/roles, editar precios, personas extra, cancelación, traslado, reversas, pagos múltiples, reportes cerrados, horarios nocturnos ni fallas entre escrituras.
+   - Cierre: casos automatizados locales para las reglas aprobadas, luego pruebas con cuenta de prueba y hoja de prueba; evidencia separada. No usar datos productivos como fixtures.
+
+### P2 · Paridad y ampliación de producto
+
+10. **Mostrar tiempo restante en habitaciones ocupadas.** FEMA presenta fecha/hora de salida prevista, pero no recalcula ni actualiza visualmente tiempo restante; el legado lo muestra con `NOW()`.
+11. **Definir/planear módulos ERP aún ausentes.** Especificar por separado mantenimiento, cargos/consumos, inventario, ventas y corte de caja; hoy sólo existen algunas referencias de pestañas, no flujos funcionales.
+12. **Validar interfaz responsive y revisión visual autenticada.** El repositorio define estilos y tarjetas adaptables, pero el smoke test HTTP no demuestra que el recorrido visual/teclado opere igual en Apps Script real ni en los dispositivos de recepción.
+
+## Próximo paso recomendado
+
+Resolver primero los pendientes P0 1–4, priorizando el acceso de recepción sin permiso de catálogos y la consulta de turnos cerrados. Después acordar los casos P1 de pagos y traslados y convertirlos en criterios de aceptación. Mantener la fuente legada intacta hasta completar conciliación y pruebas reales en entorno de prueba.
+
+## Archivos de código revisados
+
+- `src/server/00_Config.ts` · IDs de hoja, zona horaria y pestañas.
+- `src/server/01_Types.ts` · contratos de estados, entradas/salidas, catálogos, pagos y reportes.
+- `src/server/02_SheetRepository.ts` · lectura y escritura de Google Sheets.
+- `src/server/03_Authorization.ts` · sesión Google, permisos, lock y bitácora.
+- `src/server/04_RoomService.ts` · mapa, tarifas, rentas, movimientos, reversas, limpieza y reporte.
+- `src/server/05_WebApp.ts` · entrada y endpoints RPC.
+- `src/server/06_CatalogService.ts` · altas, cambios, bajas y validación de catálogos.
+- `src/server/07_ShiftService.ts` · apertura/cierre y autorización de turno.
+- `src/client/Index.html` · navegación, formularios, mapa y reporte.
+- `local/smoke.mjs`, `local/dev-server.mjs`, `local/seed-data.mjs` · emulación y cobertura local revisada.
