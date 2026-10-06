@@ -1,26 +1,32 @@
-# FEMA · ERP para Motel
+# FEMA · Gestión hotelera sobre Apps Script
 
-Aplicación web de Google Apps Script para gestionar habitaciones, estancias, limpieza, inventario, ventas y cortes. Los datos viven en una única hoja maestra de Google Sheets y el código vive en GitHub.
+FEMA es una Web App para administrar catálogos y el flujo operativo de habitaciones de moteles. El código vive en este repositorio; el servicio usa Google Apps Script y Google Sheets.
 
-## Fuente de verdad
+## Estado funcional
 
-- Código: este repositorio.
-- Datos: `FEMA · Fuente Maestra`.
-- Interfaz operativa: un único despliegue Web App de Apps Script.
-- No editar código directamente en `script.google.com`; los cambios se hacen aquí y se publican con `clasp`.
+El código actual incluye catálogos de hoteles, recepción, personal/horarios de limpieza, tipos, tarifas y habitaciones; turnos; rentas/entradas, salidas, cambios de habitación, cancelaciones, ediciones/personas extra, limpieza, correcciones y reporte del turno abierto. No están implementados todavía inventario, ventas, cargos/consumos, mantenimiento operativo ni corte de caja. La presencia de pestañas reservadas en Sheets no significa que exista un módulo de aplicación.
+
+La autenticación vigente usa la cuenta Google activa y valida al usuario en la hoja `Usuarios`. El personal no inicia sesión con credenciales propias en esta versión.
+
+## Fuentes y entornos
+
+- Código fuente: este repositorio privado.
+- Datos operativos: `FEMA · Fuente Maestra` en Google Sheets.
+- Aplicación: Web App de Apps Script; el subdominio `fema.integratech.app` es una entrada Vercel que redirige a la URL `/exec`, no un proxy de Apps Script.
+- Desarrollo aislado: emulador Docker local en `http://localhost:8787` con fixtures efímeros.
+- No editar código directamente en `script.google.com`; los cambios de aplicación parten del repositorio.
 
 ## Desarrollo local
 
-Requisitos: Node.js 22 o posterior, acceso al archivo de Google Sheets y la API de Apps Script habilitada.
+Requisitos para compilar y probar el emulador: Node.js 22 o posterior, npm y Docker Compose. La compilación local no requiere acceso a Google.
 
 ```bash
 npm install
 npm run typecheck
 npm run build
-npx clasp login
-npx clasp create-script --type standalone --title "FEMA · Apps Script" --rootDir dist
-npm run clasp:push
 ```
+
+`clasp push` sincroniza archivos con el proyecto Apps Script y es una operación externa; no forma parte de la prueba local. En este repositorio el proyecto de Apps Script ya está identificado por `project.config.json`. No ejecutes `clasp create-script` para desarrollo cotidiano porque crearía otro proyecto.
 
 ### Emulador local con Docker
 
@@ -63,7 +69,7 @@ El proyecto Vercel `fema-motel-link` ya tiene asignado `fema.integratech.app`. S
 
 Para actualizar manualmente la entrada, primero verifica el contenido de `vercel-entrypoint/vercel.json` y luego ejecuta `npx vercel --cwd vercel-entrypoint` para preview o `npx vercel --prod --cwd vercel-entrypoint --scope alex-sennin` para producción. Ese deploy sólo modifica el redirect Vercel: no sube ni despliega código Apps Script.
 
-## Estructura
+## Estructura principal
 
 ```text
 src/server/     Servicios de Apps Script
@@ -73,16 +79,26 @@ dist/           Salida generada para clasp; no se versiona
 docs/github-actions/  Plantillas de validación y despliegue
 ```
 
-## Seguridad y concurrencia
+## Documentación del proyecto
+
+FEMA adopta **ARC DEVELOPMENT STANDARD v1.3.2**. La fuente normativa permanece en `alexsennin/alex-development-standard/standards/v1.3.2/`; no se copia al repositorio.
+
+- [Reglas para agentes](AGENTS.md)
+- [Contexto del proyecto](project-methodology/PROJECT_CONTEXT.md)
+- [Estado actual](project-methodology/PROJECT_STATE.md)
+- [Arquitectura](project-methodology/ARCHITECTURE.md)
+- [Pendientes priorizados](project-methodology/TODO.md)
+- [Decisiones](project-methodology/DECISIONS.md)
+- [Entornos](project-methodology/ENVIRONMENTS.md) y [estado de publicación/despliegue](project-methodology/RELEASE_STATE.md)
+- [Documentación de diseño](project-methodology/design/)
+- [Análisis del control legado DREAMS2025](docs/ANALISIS_CONTROL_HABITACIONES_LEGADO.md)
+
+## Seguridad observada y límites
 
 - El usuario se identifica con su cuenta de Google y debe existir activo en `Usuarios`.
 - Los permisos se validan en servidor.
 - Las operaciones críticas utilizan `LockService`.
-- Las peticiones de escritura deben incluir una clave de idempotencia.
+- Las operaciones de habitaciones verifican permisos del rol y usan `LockService`.
+- Las operaciones sensibles de habitaciones verifican clave de idempotencia; no se debe generalizar esa garantía a cada acción de catálogos.
 - Cancelaciones y modificaciones sensibles generan registros en `Bitacora`.
-
-## Estado actual
-
-La aplicación incluye el mapa de habitaciones, el servicio inicial para registrar entradas y el ABC de los catálogos de hoteles, personal de recepción, personal de limpieza, tipos de habitación y habitaciones. Las bajas son lógicas y cada modificación queda registrada en `Bitacora`.
-
-El acceso a catálogos requiere `PER-CAT-GEST`. El personal de recepción utiliza el rol `ROL-RECEPCION`; una persona puede existir en el catálogo sin correo, pero necesita una cuenta de Google registrada para iniciar sesión.
+- Los cambios que afectan varias pestañas no tienen rollback transaccional automático.
