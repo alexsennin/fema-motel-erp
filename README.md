@@ -39,9 +39,9 @@ npm run dev:docker:logs
 npm run dev:docker:stop
 ```
 
-La app local queda en `http://localhost:8787`. Usa fixtures efímeros en memoria, una identidad ficticia `dev@example.test` y un puente local compatible con las llamadas `google.script.run` usadas por la UI. No contiene credenciales Google ni importa datos de producción. El contenedor compila el TypeScript fuente al arrancar; vuelve a ejecutar `npm run dev:docker` tras cambiar código para reconstruir y reiniciar.
+La app local queda en `http://localhost:8787`. Usa fixtures efímeros en memoria para dos hoteles y dos identidades ficticias con el mismo perfil, y un puente local compatible con las llamadas `google.script.run` usadas por la UI. No contiene credenciales Google ni importa datos de producción. El contenedor compila el TypeScript fuente al arrancar; vuelve a ejecutar `npm run dev:docker` tras cambiar código para reconstruir y reiniciar.
 
-La prueba de humo usa un emulador de `SpreadsheetApp`, `Session`, `Utilities` y `LockService`; no es el runtime real de Google ni una prueba visual E2E de navegador. Un reinicio vuelve a sembrar las fixtures. El `npm ci` de la imagen reportó 11 avisos de auditoría de dependencias (7 moderados y 4 altos); quedan por revisar en una tarea aparte y no se actualizaron dependencias aquí.
+La prueba de humo usa un emulador de `SpreadsheetApp`, `Session`, `Utilities` y `LockService`; incluye workers concurrentes que compiten por el mock de lock y almacenamiento compartido, pero no prueba concurrencia del runtime real de Google. Tampoco es una prueba visual E2E de navegador. Un reinicio vuelve a sembrar las fixtures. El `npm ci` de la imagen reportó 11 avisos de auditoría de dependencias (7 moderados y 4 altos); quedan por revisar en una tarea aparte y no se actualizaron dependencias aquí.
 
 El proyecto independiente de Apps Script vive dentro de la carpeta `FEMA` en
 Google Drive y abre la fuente maestra mediante su ID. `clasp create-script`

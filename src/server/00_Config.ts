@@ -26,6 +26,9 @@ const FEMA_CONFIG = Object.freeze({
     charges: "Cargos",
     payments: "Pagos",
     audit: "Bitacora",
-    sessions: "Sesiones"
+    sessions: "Sesiones",
+    products: "Productos",
+    inventory: "Inventario",
+    inventoryMovements: "MovimientosInventario"
   })
 });

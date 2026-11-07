@@ -105,9 +105,11 @@ El auxiliar podrá registrar entradas de mercancía con producto, cantidad, cost
 
 ### Turnos y cortes
 
-Cada turno de recepción debe generar un corte. Al abrirlo, se carga el estado actual de las habitaciones. Al cerrarlo, se guarda una fotografía del estado de las habitaciones al momento del corte; ese estado se conserva para el siguiente corte y las habitaciones no se reinician.
+Cada turno de recepción debe generar un corte propio. Al abrirlo, se carga el estado actual de las habitaciones. Al cerrarlo, se guarda una fotografía del estado de las habitaciones al momento del corte; ese estado se conserva para el siguiente corte y las habitaciones no se reinician.
 
 El corte cerrado debe conservarse aunque quien lo cerró termine su sesión. El usuario saliente necesita revisar y cotejar su corte mientras el usuario entrante abre un nuevo turno y registra operaciones. Las operaciones nuevas se atribuyen al nuevo turno; el corte anterior queda disponible para consulta de sólo lectura durante el cotejo.
+
+Cada operación debe quedar asociada tanto a la cuenta autenticada que la realizó como al turno/corte en que ocurrió. El perfil sólo determina permisos; no identifica quién hizo la operación. Si varias personas comparten perfil, sus movimientos y cortes permanecen asociados a cada persona/turno, sin mezclarse por perfil.
 
 Se distinguen dos conceptos que no deben depender uno del otro:
 
@@ -126,7 +128,7 @@ La convivencia de dos personas en la misma computadora requiere definir sesiones
 
 Está pendiente definir cómo se registran diferencias de cotejo, quién puede ver cortes cerrados y si el cotejo tiene estados propios.
 
-**Propuesta no aprobada para revisión:** separar cierre operativo y conciliación financiera. Al cerrar, el corte se congela y pasa a “pendiente de cotejo”; el nuevo turno puede abrir de inmediato. A termina la revisión en sólo lectura y lo marca “conciliado”. Si encuentra una diferencia, se registra un ajuste con motivo y responsable sin reescribir las operaciones originales. Falta confirmar quién puede conciliar y qué hacer cuando los importes no coinciden.
+**Propuesta no aprobada para revisión:** separar cierre operativo y conciliación financiera. Al cerrar, el corte queda cerrado y pasa a “pendiente de cotejo”; se conserva el estado de las habitaciones en ese punto y el nuevo turno puede abrir de inmediato. Esto no bloquea el hotel ni las operaciones del turno nuevo. A termina la revisión en sólo lectura y lo marca “conciliado”. Si encuentra una diferencia, se registra un ajuste con motivo y responsable sin reescribir las operaciones originales. Falta confirmar quién puede conciliar y qué hacer cuando los importes no coinciden.
 
 ## Separación entre objetivo y estado actual
 

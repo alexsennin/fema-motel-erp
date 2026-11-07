@@ -52,6 +52,7 @@ interface InitialState {
   generatedAt: string;
   rooms: RoomCard[];
   entryRates: EntryRate[];
+  vehicleSuggestions: string[];
   cleaningStaff: CleaningStaffOption[];
   shift: ShiftState;
 }
@@ -99,20 +100,35 @@ interface RoomTypeInput { idTipo?: string; idMotel: string; nombre: string; prec
 interface RateInput { idTarifa?: string; idTipo: string; nombre: string; minutos: number; precioBase: number; personasIncluidas: number; vigenciaInicio: string; vigenciaFin: string; }
 interface RoomInput { idHabitacion?: string; idMotel: string; numero: string; idTipo: string; puntosLimpieza: number; }
 
+type EntryArrivalMode = "VEHICULO" | "TAXI" | "CAMINANDO";
+
 interface EntryInput {
   idHabitacion: string;
   idTarifa: string;
+  medioLlegada: EntryArrivalMode;
   marcaModeloVehiculo: string;
   placas: string;
   personasExtra: number;
   formaPago: string;
+  minutosCotizados: number;
+  precioBaseCotizado: number;
+  personasIncluidasCotizadas: number;
+  precioPersonaExtraCotizado: number;
   idempotencyKey: string;
 }
 
 interface EntryResult {
   idCiclo: string;
   idEstancia: string;
+  medioLlegada: EntryArrivalMode;
+  minutos: number;
+  precioBase: number;
+  personasIncluidas: number;
+  personasExtra: number;
+  precioPersonaExtra: number;
+  importePersonasExtra: number;
   precioFinal: number;
+  formaPago: string;
   fechaHoraSalidaPrevista: string;
 }
 
@@ -227,6 +243,90 @@ interface RentalReportRow {
   fechaHoraLimpieza: string;
   personalLimpieza: string;
   minutosLimpieza: number | null;
+}
+
+interface ProductInventoryItem {
+  idProducto: string;
+  idMotel: string;
+  categoria: string;
+  nombre: string;
+  precioVenta: number;
+  costoUnitario: number;
+  activo: boolean;
+  stockBodega: number;
+  stockAnaquel: number;
+  stockTotal: number;
+}
+
+interface InventoryMovementRecord {
+  idMovimiento: string;
+  idMotel: string;
+  idProducto: string;
+  nombreProducto: string;
+  categoria: string;
+  tipoMovimiento: "ENTRADA" | "TRASPASO_A_ANAQUEL" | "TRASPASO_A_BODEGA" | "AJUSTE" | "VENTA";
+  origen: string;
+  destino: string;
+  cantidad: number;
+  stockBodegaDespues: number;
+  stockAnaquelDespues: number;
+  motivo: string;
+  idTurno: string;
+  idEstancia: string;
+  idUsuario: string;
+  fechaHora: string;
+}
+
+interface SaleItemInput {
+  idProducto: string;
+  cantidad: number;
+}
+
+interface RegisterSaleInput {
+  idHabitacion: string;
+  items: SaleItemInput[];
+  cobrarInmediato: boolean;
+  formaPago?: "EFECTIVO" | "TARJETA";
+  idempotencyKey?: string;
+}
+
+interface RegisterSaleResult {
+  idCargo: string;
+  total: number;
+  habitacion: string;
+  itemsVendidos: number;
+}
+
+interface TransferInventoryInput {
+  idProducto: string;
+  cantidad: number;
+  direccion: "BODEGA_A_ANAQUEL" | "ANAQUEL_A_BODEGA";
+  motivo?: string;
+}
+
+interface AdjustInventoryInput {
+  idProducto: string;
+  ubicacion: "BODEGA" | "ANAQUEL";
+  nuevoStock: number;
+  motivo: string;
+}
+
+interface SaveProductInput {
+  idProducto?: string;
+  categoria: string;
+  nombre: string;
+  precioVenta: number;
+  costoUnitario?: number;
+  stockBodegaInicial?: number;
+  stockAnaquelInicial?: number;
+}
+
+interface OccupiedRoomOption {
+  idHabitacion: string;
+  numeroHabitacion: string;
+  tipoHabitacion: string;
+  idEstancia: string;
+  precioFinal: number;
 }
 
 interface ApiResponse<T> {

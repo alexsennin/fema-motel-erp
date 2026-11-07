@@ -8,6 +8,7 @@ function doGet(): GoogleAppsScript.HTML.HtmlOutput {
 function apiGetInitialState(): ApiResponse<InitialState> {
   try {
     const user = getCurrentUser_();
+    seedMenuIfEmpty_(user.idMotel, user);
     return {
       ok: true,
       data: {
@@ -15,6 +16,7 @@ function apiGetInitialState(): ApiResponse<InitialState> {
         generatedAt: Utilities.formatDate(now_(), FEMA_CONFIG.timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX"),
         rooms: listRoomCards_(user),
         entryRates: listEntryRates_(user),
+        vehicleSuggestions: listVehicleSuggestions_(user),
         cleaningStaff: listCleaningStaffOptions_(user),
         shift: getShiftState_(user)
       }
@@ -154,6 +156,41 @@ function apiSaveRoom(input: RoomInput): ApiResponse<{ id: string }> {
 
 function apiSetRoomActive(id: string, active: boolean): ApiResponse<null> {
   try { setRoomActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiGetProductsAndInventory(): ApiResponse<ProductInventoryItem[]> {
+  try { return { ok: true, data: getProductsAndInventory_(getCurrentUser_()) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiGetOccupiedRoomsForSale(): ApiResponse<OccupiedRoomOption[]> {
+  try { return { ok: true, data: getOccupiedRoomsForSale_(getCurrentUser_()) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiSaveProduct(input: SaveProductInput): ApiResponse<{ id: string }> {
+  try { return { ok: true, data: saveProduct_(getCurrentUser_(), input) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiTransferInventory(input: TransferInventoryInput): ApiResponse<null> {
+  try { transferInventory_(getCurrentUser_(), input); return { ok: true, data: null }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiAdjustInventory(input: AdjustInventoryInput): ApiResponse<null> {
+  try { adjustInventory_(getCurrentUser_(), input); return { ok: true, data: null }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiRegisterRoomSale(input: RegisterSaleInput): ApiResponse<RegisterSaleResult> {
+  try { return { ok: true, data: registerSaleToRoom_(getCurrentUser_(), input) }; }
+  catch (error) { return apiError_(error); }
+}
+
+function apiGetInventoryMovements(): ApiResponse<InventoryMovementRecord[]> {
+  try { return { ok: true, data: getInventoryMovements_(getCurrentUser_()) }; }
   catch (error) { return apiError_(error); }
 }
 

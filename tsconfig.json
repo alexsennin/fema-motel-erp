@@ -20,6 +20,7 @@
     "src/server/03_Authorization.ts",
     "src/server/04_RoomService.ts",
     "src/server/07_ShiftService.ts",
+    "src/server/08_InventoryService.ts",
     "src/server/05_WebApp.ts",
     "src/server/06_CatalogService.ts"
   ]

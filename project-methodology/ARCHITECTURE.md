@@ -44,6 +44,12 @@ El flujo funcional consultado usa principalmente usuarios/permisos, catálogos, 
 
 Los IDs representan relaciones entre hojas. La persistencia está en Google Sheets, por lo que las integridades y unicidades se validan en lógica de aplicación, no por constraints de base relacional. Varias operaciones mutan varias hojas en secuencia: lock e idempotencia reducen ciertos riesgos, pero no garantizan rollback atómico ante error intermedio.
 
+### Esquema aditivo propuesto (FEMA-UPD-03)
+
+La propuesta documental de [`FEMA-UPD-03`](FEMA_UPD03_SCHEMA_RECOVERY.md) agrega asignación usuario-hotel/perfil, parámetros por habitación, detalle inmutable de períodos, vínculos de operación y turno, journal `Operaciones` y fotografías de corte (`Cortes` + `CorteHabitaciones`). No está implementada: FEMA-UPD-01 debe cerrar las reglas operativas y FEMA-UPD-02 identidad, sesiones y transporte idempotente antes de modificar tipos, repositorio, fixtures o una hoja conectada.
+
+El contrato propone fail-closed si faltan cabeceras, recuperación por clave/hash/IDs deterministas, bloqueo del hotel ante escrituras parciales y confirmación visible sólo al final. No promete rollback transaccional de Sheets. Los importes nuevos se leen de cargos/pagos confirmados con valores capturados al registrar; nunca de precios actuales. Los importes legados afectados por sobrescrituras quedan no verificables y no se reconstruyen.
+
 ## Flujos funcionales
 
 1. La Web App sirve `Index.html`; `apiGetInitialState()` obtiene el usuario actual, habitaciones, tarifas, personal de limpieza y turno.

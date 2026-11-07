@@ -7,6 +7,7 @@ services:
       - "127.0.0.1:8787:8787"
     environment:
       PORT: "8787"
+      FEMA_LOCAL_DOCKER: "1"
       FEMA_LOCAL_USER_EMAIL: "dev@example.test"
     read_only: true
     tmpfs:
