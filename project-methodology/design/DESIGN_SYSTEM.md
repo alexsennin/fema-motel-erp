@@ -1,22 +1,29 @@
-# Sistema visual FEMA (observado)
+# Sistema visual FEMA (Implementado)
 
-Estado: documentación estática de `src/client/Index.html`; no es aprobación de un rediseño ni manual de marca autorizado.
+Estado: diseño operativo minimalista estilo Steve Jobs implementado en `src/client/Index.html`.
 
-## Principios visuales existentes
+## Principios visuales
 
-- Interfaz operativa en español, jerarquía directa por módulos y acciones.
-- Fondo neutro claro, azul marino para identidad/navegación, azul para acción primaria y color de borde de habitación según estado.
-- Tablas para catálogos/reporte; tarjetas para estado operativo por habitación; dialogs para captura.
-- Estados vacíos, carga, error, éxito y controles deshabilitados se comunican con mensajes/toasts.
-- El diseño prioriza escritorio; el CSS incluye adaptación básica a viewport estrecho. Verificar con navegador y usuarios antes de declarar accesibilidad/responsive completo.
+- **Filosofía 1-clic:** Las acciones más frecuentes se ejecutan con un solo toque (asignar limpieza, finalizar limpieza, abrir entrada, gestionar producto), eliminando pasos y diálogos intermedios.
+- **Jerarquía y calma visual:** La interfaz privilegia la información operativa inmediata. Se eliminan los diálogos con botones excesivos; las opciones secundarias se resguardan en paneles laterales contextualmente.
+- **Barra superior única (52px):** Encabezado y navegación integrados en una sola franja compacta, permitiendo que el tablero de habitaciones aproveche el 100% de la pantalla útil superior.
+- **Panel lateral unificado (`Sheet`):** Componente tipo drawer deslizable que mantiene al operador en contexto sin interrumpir la visión general del tablero.
+- **Feedback no intrusivo:** Notificaciones toast con opción de "Deshacer" para correcciones rápidas y carga asíncrona sin parpadeos molestos.
 
-## Identidad/jerarquía observada
+## Identidad y paleta semántica
 
-Encabezado FEMA; navegación `Catálogos`, `Habitaciones`, `Reporte de rentas`; acciones agrupadas por estado de habitación; footer con copyright/versión/desarrollador. No se localizó una fuente de marca externa o manual visual aprobado.
+- Fondo de aplicación neutro claro (`#f8fafc`).
+- Encabezado institucional en azul marino oscuro (`var(--nav)`).
+- Estados operativos con codificación de color de alto contraste:
+  - Libre / Disponible: Verde sobrio (`--st-free`, `#16a34a`).
+  - Ocupada: Carmesí (`--st-busy`, `#be123c`).
+  - Sucia: Ámbar cálido (`--st-dirty`, `#b45309`).
+  - Limpieza: Azul rey (`--st-clean`, `#2563eb`).
+  - Vencida: Rojo intenso (`--st-late`, `#dc2626`).
 
-## Inconsistencias/riesgos conocidos
+## Inconsistencias resueltas
 
-- La navegación empieza en Catálogos y la carga inicial requiere que API de catálogos y API operativa resuelvan juntas; el permiso del módulo puede bloquear la pantalla completa.
-- El reporte usa tabla ancha con `min-width:1120px`, requiriendo scroll horizontal en pantallas pequeñas.
-- Colores se declaran como variables CSS, pero no se documentan ratios de contraste ni pruebas automatizadas de accesibilidad.
-- La versión/compilación del footer es texto estático; confirmar actualización en el proceso de release.
+- Se eliminó el diálogo `#roomActionsDialog` que acumulaba hasta 8 botones simultáneos.
+- Se eliminaron las 4 cajas métricas masivas de inventario, sustituidas por una barra de resumen compacta con filtros clicables.
+- Se sustituyó la tabla de inventario con múltiples botones diminutos por fila por una tabla limpia de 4 columnas donde toda la fila es interactiva.
+- Se desacopló la navegación de Catálogos relegándola al menú de ajustes ⚙, permitiendo arranque directo en Habitaciones.

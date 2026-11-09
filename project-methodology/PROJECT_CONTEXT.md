@@ -18,9 +18,9 @@ FEMA es un sistema de gestión hotelera para los moteles de la organización. El
 
 - El despliegue productivo de Apps Script y la hoja maestra son sistemas operativos externos; no mutarlos sin autorización específica.
 - La URL estable de Web App debe conservarse en despliegues autorizados.
-- La autenticación implementada usa el correo de la cuenta Google activa. El usuario debe estar activo en `Usuarios`; permisos se asignan por rol. El acceso propio mediante usuario/contraseña ha sido solicitado como dirección futura, pero no está implementado ni se ha acordado su diseño.
-- Los ciclos, estados de habitación, estancia, limpieza y pagos se relacionan mediante IDs en Sheets. No hay constraints relacionales ni transacción de varias pestañas automática.
-- No inferir implementación de inventario, ventas, consumos/cargos, caja o mantenimiento operativo por la existencia de pestañas/configuración.
+- La autenticación implementada usa el correo de la cuenta Google activa. El usuario debe estar activo en `Usuarios`; permisos se asignan por rol. El acceso propio mediante usuario/contraseña o PIN de 6 dígitos ha sido solicitado como dirección futura, pero permanece en fase de prueba y no está activado en producción.
+- Los ciclos, estados de habitación, estancia, limpieza, ventas y pagos se relacionan mediante IDs en Sheets. La integridad y unicidad se gestionan a nivel aplicativo con lock e idempotencia transversal (`Operaciones`), mitigando la falta de transacciones relacionales en Google Sheets.
+- El módulo de inventario (catálogo de 68 productos, existencias en bodega/anaquel, traspasos, correcciones físicas), ventas a habitación, cuenta de estancia (`StayAccount`) y liquidación obligatoria al desocupar están implementados en el código. Mantenimiento operativo y turnos históricos cerrados siguen pendientes de alcance.
 - El emulador local no contiene información operativa real ni valida integración de Google.
 
 ## Metodología adoptada y clasificación

@@ -25,24 +25,27 @@ La redirección Vercel no proxifica la aplicación ni la identidad de Google. El
 ## Componentes y responsabilidades
 
 - **`00_Config.ts`:** spreadsheet ID, zona horaria, fila de encabezados 4, inicio de datos 5, timeout de lock y nombres de pestañas.
-- **`01_Types.ts`:** contratos de usuarios, estado de habitación, tarifas, estancias, limpieza, turnos, catálogos, movimientos y reporte.
-- **`02_SheetRepository.ts`:** lee encabezados/filas, mapea registros, busca por ID, agrega filas y actualiza celdas. No provee transacciones multihoja.
-- **`03_Authorization.ts`:** identifica usuario por correo de Google, verifica permiso del rol, envuelve escrituras críticas en `LockService` y agrega auditoría a `Bitacora`.
-- **`04_RoomService.ts`:** mapa de habitaciones, tarifas vigentes, disponibilidad de limpieza, entradas/salidas, pagos de entrada, cambios, cancelaciones, ediciones, personas extra, correcciones, limpieza y reporte de rentas.
-- **`05_WebApp.ts`:** `doGet()` y funciones RPC `api*`; transforma excepciones en respuestas `{ok,data}` / `{ok:false,error}`.
+- **`01_Types.ts`:** contratos de usuarios, estado de habitación, tarifas, estancias, limpieza, turnos, catálogos, productos, inventario, ventas, cuenta de estancia (`StayAccount`), movimientos y reporte.
+- **`02_SheetRepository.ts`:** caché por ejecución (`ROWS_CACHE_`), lectura tolerante de encabezados/filas, escrituras atómicas de fila completa en un solo `setValues`, fechas ISO uniformes y agregación de filas.
+- **`03_Authorization.ts`:** identifica usuario por correo de Google, verifica permiso del rol (`assertPermission_`), envuelve escrituras críticas en `LockService` y agrega auditoría a `Bitacora`.
+- **`04_RoomService.ts`:** mapa de habitaciones, tarifas vigentes, disponibilidad de limpieza, entradas/salidas, pagos de entrada, cambios, cancelaciones, ediciones, personas extra, correcciones, limpieza y reporte de rentas. Integrado con `runIdempotent_` y validación de liquidación de saldo previo a liberar habitación.
+- **`05_WebApp.ts`:** `doGet()` y funciones RPC `api*` con manejo de excepciones estructurado `{ok,data}` / `{ok:false,error}` e invalidación de caché por petición.
 - **`06_CatalogService.ts`:** lectura/escritura de catálogos, validación, bajas lógicas y auditoría.
 - **`07_ShiftService.ts`:** consulta, apertura/cierre y propietario de turno.
-- **`Index.html`:** vistas de catálogos, habitaciones y reporte; formularios/dialogs; validación básica cliente y llamadas RPC.
-- **`local/`, `docker/`:** servicio Node y emuladores/fakes para prueba aislada. No conecta a Google.
+- **`08_InventoryService.ts`:** catálogo de 68 productos del menú con 9 categorías fijas, control de existencias en bodega y anaquel para venta, traspasos bidireccionales, corrección física de conteo con motivo obligatorio, registro de ventas a habitación y verificación/reparación administrativa.
+- **`10_Operations.ts`:** capa de idempotencia transversal (`runIdempotent_`) con persistencia en hoja `Operaciones` para evitar duplicidad de transacciones ante reintentos de red o doble clic.
+- **`11_StayAccount.ts`:** consolidación de balance de estancia activa (`getStayAccount_`), sumando cargos de renta, personas adicionales y ventas de tienda contra pagos aplicados.
+- **`Index.html`:** interfaz de usuario minimalista estilo Steve Jobs con barra superior de 52px (Habitaciones, Tienda, Corte, reloj, turno, ajustes ⚙), panel lateral unificado `Sheet` para asignación de camaristas en 1 clic, finalización de limpieza en 1 clic, cuenta de estancia con catálogo de consumo embebido y tienda limpia con tabla de 4 columnas clicable.
+- **`local/`, `docker/`:** servicio Node y emuladores/fakes para prueba aislada con soporte de fallas inyectadas y concurrencia. No conecta a Google.
 - **`vercel-entrypoint/`:** configuración de proyecto distinto que redirige todo el tráfico a `/exec`.
 
 ## Datos
 
-Pestañas declaradas en `FEMA_CONFIG.sheets`: `Usuarios`, `Roles`, `RolPermisos`, `Permisos`, `Moteles`, `PersonalLimpieza`, `TurnosLimpieza`, `TiposHabitacion`, `Tarifas`, `Habitaciones`, `Turnos`, `Ciclos`, `EventosHabitacion`, `Estancias`, `MovimientosEstancia`, `Limpiezas`, `Mantenimientos`, `Cargos`, `Pagos`, `Bitacora` y `Sesiones`.
+Pestañas declaradas en `FEMA_CONFIG.sheets`: `Usuarios`, `Roles`, `RolPermisos`, `Permisos`, `Moteles`, `PersonalLimpieza`, `TurnosLimpieza`, `TiposHabitacion`, `Tarifas`, `Habitaciones`, `Turnos`, `Ciclos`, `EventosHabitacion`, `Estancias`, `MovimientosEstancia`, `Limpiezas`, `Mantenimientos`, `Cargos`, `Pagos`, `Bitacora`, `Sesiones`, `Operaciones`, `Ventas`, `CategoriasProducto`, `Productos`, `Inventario` y `MovimientosInventario`.
 
-El flujo funcional consultado usa principalmente usuarios/permisos, catálogos, habitaciones, turnos, ciclos, eventos, estancias, movimientos, limpiezas, pagos y bitácora. `Mantenimientos`, `Cargos` y `Sesiones` están declaradas, pero no hay API/UI correspondiente en el código inspeccionado. La lista de pestañas del código no garantiza que la hoja real tenga encabezados compatibles.
+El flujo funcional implementado cubre usuarios/permisos, catálogos maestros, habitaciones, turnos, ciclos, eventos, estancias, limpiezas, cargos, ventas, pagos, bitácora, operaciones idempotentes, productos, inventario bodega/anaquel y auditoría de movimientos. `Mantenimientos` y `Sesiones` quedan reservadas para fases futuras.
 
-Los IDs representan relaciones entre hojas. La persistencia está en Google Sheets, por lo que las integridades y unicidades se validan en lógica de aplicación, no por constraints de base relacional. Varias operaciones mutan varias hojas en secuencia: lock e idempotencia reducen ciertos riesgos, pero no garantizan rollback atómico ante error intermedio.
+Los IDs representan relaciones entre hojas. La persistencia está en Google Sheets, por lo que las integridades y unicidades se validan en lógica de aplicación. La hoja `Operaciones` registra el estado (`EN_CURSO`, `CONFIRMADA`, `FALLIDA`) de cada acción sensible protegida por `LockService`.
 
 ### Esquema aditivo propuesto (FEMA-UPD-03)
 

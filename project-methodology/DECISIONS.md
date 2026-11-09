@@ -43,6 +43,35 @@ Las decisiones registran acuerdos duraderos, no propuestas ni actividad de cada 
 - Contexto: `docker-compose.yml`, `local/` y README muestran un emulador local que no conecta a Google.
 - Decisión: conservar el emulador aislado para desarrollo y pruebas; no cargar datos operativos/credenciales reales.
 
+## DEC-006 — Módulo de inventario y ventas acoplado a habitación
+
+- Fecha: 2026-11-06.
+- Estado: implementado y verificado en emulador local.
+- Contexto: el usuario requirió control de existencias en bodega y anaquel para 68 productos de menú, traspasos auditables, corrección física y registro de consumos a habitación con bloqueo de precio.
+- Decisión: implementar catálogo maestro ordenado por 9 categorías fijas (`CategoriasProducto`), control de existencias en hoja `Inventario`, auditoría en `MovimientosInventario` y ventas directas con deducción de anaquel vinculadas a la estancia y cargadas a `Ventas` y `Cargos`.
+- Consecuencias: las ventas a habitación descuentan existencias físicas al confirmar; no se permite vender si no hay estancia activa ocupada para asociar la cuenta.
+
+## DEC-007 — Idempotencia transversal y liquidación en salida
+
+- Fecha: 2026-11-07.
+- Estado: implementado y verificado en pruebas unitarias y de humo.
+- Contexto: Google Sheets no ofrece atomicidad transaccional; reintentos de red o doble clic en la interfaz podían generar cargos duplicados o desincronización de inventario. Además, se desocupaban habitaciones dejando consumos sin cobrar.
+- Decisión: incorporar la hoja `Operaciones` con el helper `runIdempotent_` bajo `LockService` para validar unicidad por clave (`idempotencyKey`). Consolidar el estado de cuenta mediante `StayAccount` e impedir la liberación de una habitación a `SUCIA` si presenta saldo pendiente, a menos que se registre el pago de liquidación en el mismo acto.
+- Consecuencias: previene dobles cargos y pérdidas financieras por cobros omitidos en recepción.
+
+## DEC-008 — Rediseño minimalista de interfaz Steve Jobs (1-clic)
+
+- Fecha: 2026-11-07.
+- Estado: implementado en cliente `Index.html`.
+- Contexto: el usuario reportó sobrecarga visual de ventanas emergentes y opciones secundarias con el diálogo de 8 botones (`#roomActionsDialog`).
+- Decisión: eliminar `#roomActionsDialog` y adoptar un panel lateral deslizable (`Sheet`) contextual con flujo 1-clic por estado:
+  - Habitación Disponible: apertura directa de entrada.
+  - Habitación Sucia: listado de camaristas para asignación en 1 toque con opción de deshacer en toast.
+  - Habitación en Limpieza: finalización en 1 toque con opción de deshacer.
+  - Habitación Ocupada: cuenta de estancia, saldo en alto contraste, catálogo de consumo embebido y cobro/liberación directo.
+  - Barra superior unificada de 52px con tabs `Habitaciones · Tienda · Corte` pegada a las flashcards de habitaciones.
+  - Tienda limpia con tabla de 4 columnas clicable y Sheet de producto.
+
 ## Registro previo de metodología
 
 La adopción ALEX v1.0 de 2026-10-04 se conserva como antecedente en la rama `codex/adopt-alex-standard-v1`; fue decisión correcta para el alcance de entonces. Esta adopción la sustituye en la rama actual y no copia archivos canónicos de ninguna versión del estándar.

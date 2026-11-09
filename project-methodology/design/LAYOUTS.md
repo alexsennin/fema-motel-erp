@@ -1,28 +1,28 @@
-# Layouts FEMA (observados)
+# Layouts FEMA (Implementados)
 
-Fuente estática: `src/client/Index.html`.
+Fuente: `src/client/Index.html`.
 
-## Aplicación
+## Estructura general
 
 ```text
-Header FEMA / reloj digital / píldora de sesión / botón de turno (Cerrar turno / Abrir turno)
-Nav de módulos (Habitaciones por defecto, Reporte, Catálogos)
-Main (aprovechamiento visual completo hasta 1800px, pegado directamente al menú superior)
-  Habitaciones: grid directo de tarjetas cuadradas interactivas (8 columnas x 4 filas uniformes) sin barras intermedias
-  Reporte: título/actualizar → tarjetas de resumen métrico → tabla agrupada sticky
-  Catálogos: título/alta → tabs redondeadas → tabla sticky
-Footer institucional
-Dialogs de captura accesibles y toast global
+Header app-bar (52px fijo): Marca FEMA | Nav (Habitaciones, Tienda, Corte) | Reloj, Turno, Usuario, Ajustes ⚙
+Main (ancho completo, pegado a 6px del app-bar):
+  Habitaciones: cuadrícula interactiva de 8 columnas x 4 filas sin barras intermedias
+  Tienda: barra de resumen y stock pills | pestañas de categoría y buscador | tabla limpia de 4 columnas
+  Corte: tarjetas de balance financiero (Total, Efectivo, Tarjeta, Cuartos) | tabla agrupada de rentas
+  Catálogos: accesible desde menú ⚙ | tabs de entidad | tabla sticky
+Sheet lateral (440px derecha en desktop / hoja inferior <768px):
+  - Sucia: lista de camaristas para asignación 1-clic
+  - Limpieza: duración y botón finalizar 1-clic
+  - Ocupada: cuenta de estancia, balance de saldo, consumo embebido y liquidación
+  - Producto: existencias anaquel/bodega, traspaso stepper, edición y ajuste físico
+Footer discreto de copyright y versión
 ```
 
-## Restricciones observadas
+## Restricciones y comportamiento
 
-- Contenido principal aprovecha el 100% del viewport hasta 1800px y padding superior ultra-compacto de 6px para posicionar las tarjetas inmediatamente debajo del menú superior.
-- Tablero de habitaciones tipo rack hotelero: vista numérica directa y limpia (sin barras intermedias ni filtros innecesarios). Usa CSS grid optimizado de 8 columnas en escritorio para distribuir uniformemente las 31 habitaciones en 4 filas (8 + 8 + 8 + 7), maximizando la cobertura de pantalla sin desbordes verticales y adaptándose dinámicamente a tablet (6 / 4 cols) y móvil (3 cols).
-- Tarjetas flash-card cuadradas exactas (`aspect-ratio: 1 / 1;`): cabecera superior fija en 1 sola línea con nombre auto-ajustable y precio base; cuerpo 100% en color de estado sólido para todas las tarjetas (disponibles, sucias, ocupadas y limpieza); datos de ocupación y limpieza integrados sobre el color con tipografía blanca de alto contraste; cuadrícula centrada con separación amplia (gap 16px); y efecto de pulsación física al clic/selección (`scale(0.96)`).
-- Interacción: clic o Enter en una tarjeta disponible abre directamente el registro de entrada; en tarjetas ocupadas, sucias o en limpieza abre `#roomActionsDialog` para sus respectivas opciones múltiples.
-- En `max-width:650px`, header/navegación/espaciado/forms cambian a un layout estrecho; la tabla conserva scroll horizontal.
-- Reporte requiere ancho mínimo de 1120px y tablas de catálogos de 650px.
-- Captura usa dialogs de ancho máximo 580px y form de dos columnas que pasa a una columna bajo 768px.
-
-No se verificó una sesión E2E visual, zoom, dimensiones intermedias ni navegación sólo con teclado en el runtime real.
+- **Espacio vertical optimizado:** La fusión de encabezado y navegación en una barra de 52px ahorra 45px de altura muerta, colocando las habitaciones inmediatamente accesibles al abrir la app.
+- **Tablero de rack hotelero:** Cuadrícula de 8 columnas en desktop para distribuir las 31 habitaciones de forma equilibrada sin scroll innecesario.
+- **Interacción directa 1-clic:** No hay menús emergentes intermedios. Tocar una habitación abre directamente el formulario de entrada o el Sheet específico del estado.
+- **Panel lateral (`Sheet`):** Se superpone con backdrop semitransparente suave (`rgba(15, 23, 42, 0.6)` con blur), se cierra con Escape, con el botón ✕ o tocando fuera.
+- **Adaptabilidad móvil:** En pantallas menores a 768px, el `Sheet` se proyecta como bottom-sheet (hoja inferior del 85vh de alto) y la cuadrícula de habitaciones se reorganiza a 3 columnas.

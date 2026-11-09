@@ -1,24 +1,23 @@
-# Componentes y patrones FEMA (observados)
+# Componentes y patrones FEMA (Implementados)
 
-Fuente: HTML/CSS/JavaScript inline de `src/client/Index.html`; no existe un sistema de componentes JavaScript separado.
+Fuente: HTML/CSS/JavaScript modular de `src/client/Index.html`.
 
 | Patrón | Clases/elementos | Uso y estados |
 |---|---|---|
-| Navegación | `nav`, `.nav-btn` | Cambia vistas (Habitaciones por defecto, Reporte, Catálogos); activa una clase `active`. |
+| Barra superior unificada | `header.app-bar`, `.app-bar-left`, `.brand-logo`, `.app-nav`, `.nav-btn` | Franja de 52px sticky con FEMA, pestañas (`Habitaciones`, `Tienda`, `Corte`), reloj, píldora de turno y menú ⚙. |
+| Menú de ajustes | `.settings-wrap`, `.settings-btn`, `.settings-dropdown`, `.settings-item` | Popover desplegable para acceso a Catálogos del sistema y verificación administrativa de inventario. |
 | Tablero de habitaciones | `.rooms-grid-numeric`, `.room` | Vista limpia directa pegada al menú superior sin barras intermedias; tablero de 8 columnas x 4 filas uniformes. |
-| Tabs de catálogo | `.catalog-tabs`, `.catalog-tab` | Selección entre siete listas/catálogos. |
-| Panel/tarjeta | `.card`, `.room`, `.rack-header`, `.rack-body`, `.rack-hero-center`, `.rack-card-content` | Contenedores de resumen de reporte y tarjeta flash-card motelera cuadrada (proporción 1:1; franja superior en 1 sola línea fija con precio y texto auto-ajustable; cuerpo con color de estado continuo al 100% en todas las tarjetas; datos de limpieza y ocupada integrados directamente sobre el color con texto en blanco de alto contraste; cuadrícula optimizada de 8 columnas x 4 filas uniformes cubriendo la mayor área posible hasta 1800px con separación amplia de 16px; efecto táctil al clic con resplandor en hover). |
-| Control de turno | `#headerShiftSlot`, `.header-shift-btn.close-shift`, `.header-shift-btn.open` | Botón contextual integrado en el encabezado superior para abrir o cerrar turno sin ocupar espacio vertical sobre el tablero de habitaciones. |
-| Estado | `.status.on`, `.status.off`, `.room-status-badge`, `[data-status]` | Disponibilidad, baja/activo, estado de habitación y etiqueta visual por estado. |
-| Botones | `.btn`, `.primary`, `.secondary`, `.danger`, `.exit-btn`, `.cleaning-btn` | Acciones; `.btn:disabled` baja opacidad y bloquea click; `:focus-visible` accesible. |
-| Tablas | `.table-wrap[role="region"][tabindex="0"]`, `table`, `.report-table` | Catálogos y reporte; scroll horizontal accesible con encabezado fijo (`thead sticky`). |
-| Captura | `<dialog>`, `.form`, `.field`, `.entry-summary` | Formularios modales con contención de overscroll y fondo oscurecido; soporte de cotización defensiva e incremento de extras. |
-| Gestión de habitación | `#roomActionsDialog`, `.room-actions-content`, `.modal-actions-grid` | Ventana emergente activada al hacer clic o presionar Enter en una tarjeta de habitación; concentra las acciones operativas contextuales y su información detallada. |
-| Espera y feedback RPC | `#loadingModal`, `.loading-card`, `.loading-spinner-ring`, `.loading-badge-tag`, `.loading-progress-bar` | Ventana modal nativa de alta prioridad para llamadas remotas a Apps Script / Sheets. Proporciona retroalimentación contextual (`CARGANDO`, `PROCESANDO`, `REVISANDO`, `GUARDANDO`), previene doble clic accidental en top-layer y evita cierre accidental por Escape durante el tránsito. |
-| Módulo de Inventario | `#inventoryView`, `.inventory-metric-cards`, `.inv-card`, `.inventory-filter-bar`, `.inv-cat-tabs`, `.inventory-table`, `.stock-badge` | Vista completa de inventario con métricas en tiempo real (total productos, unidades bodega, unidades anaquel, agotados), pestañas de categorías, buscador y tabla de productos con acciones directas. |
-| Modal de Ventas a Habitación | `#saleModal`, `.modal-large`, `.sale-room-bar`, `.sale-columns-grid`, `.sale-category-chips`, `.sale-products-grid`, `.sale-prod-card`, `.sale-cart-table`, `.qty-control`, `.sale-summary-box` | Modal optimizado de ventas a habitación ocupada con dos columnas (catálogo interactivo con chips y carrito en tiempo real). Precio bloqueado del catálogo, cantidad editable con botones `+`/`-`, cargo a cuenta o pago inmediato, y descuento directo de anaquel. |
-| Modales de Operación de Stock | `#productEditorModal`, `#transferStockModal`, `#adjustStockModal`, `#movementsModal` | Diálogos para altas de nuevos productos, modificación de precios, traspasos bidireccionales Bodega ↔ Anaquel, corrección física de stock con motivo obligatorio y consulta de auditoría de movimientos. |
-| Feedback | `.message`, `.error`, `.empty`, `.toast` | Carga, error, vacío y notificación temporal tipo toast con animación de entrada. |
+| Tarjeta flash-card | `.room`, `.rack-header`, `.rack-body`, `.rack-hero-center`, `.rack-card-content` | Proporción 1:1; franja superior con precio y nombre; cuerpo con color de estado sólido al 100%; tiempo restante y placas; clic enruta directamente al panel correspondiente. |
+| Panel lateral unificado | `#sheet`, `dialog.sheet`, `.sheet-header`, `.sheet-body`, `.sheet-footer` | Drawer lateral deslizante a la derecha (440px en desktop / inferior en móvil). Unifica la interacción contextual de habitaciones y productos. |
+| Asignación de camaristas | `.staff-picker-wrap`, `.staff-picker-btn`, `.staff-picker-name` | Panel lateral de habitación sucia: lista de camaristas para asignación en 1 toque con toast de deshacer. |
+| Finalización de limpieza | `.clean-finish-wrap`, `.sheet-clean-summary`, `.clean-stat-box` | Panel lateral de habitación en limpieza: minutos transcurridos y botón para finalizar a Disponible en 1 toque. |
+| Cuenta de estancia | `.stay-sheet-wrap`, `.stay-balance-card`, `.stay-items-list`, `.stay-item-row` | Panel lateral de habitación ocupada: balance de cuenta en alto contraste, desglose de renta/extras/consumos, y cobro directo. |
+| Consumo embebido | `.sheet-picker-zone`, `.sheet-picker-chips`, `.sheet-picker-grid` | Catálogo interactivo embebido dentro de la cuenta de la habitación para cargar productos con un solo clic. |
+| Tabla limpia de tienda | `.inventory-table-clean`, `.inv-row-clickable`, `.inv-badge-anaquel` | Tabla de 4 columnas (Producto, Precio, Anaquel, Bodega). Fila completa interactiva sin botones secundarios. |
+| Resumen de inventario | `.inv-summary-bar`, `.inv-summary-text`, `.inv-filter-pills`, `.inv-pill` | Barra compacta de conteo total, bajo stock y agotados, con píldoras de filtrado inmediato. |
+| Gestión de producto | `.prod-sheet-container`, `.sheet-stock-grid`, `.sheet-stepper-row` | Panel lateral para surtir anaquel desde bodega con stepper, editar nombre/precio y registrar corrección física obligatoria. |
+| Resumen financiero de corte | `.corte-summary-grid`, `.corte-card`, `.corte-card-title`, `.corte-card-val` | Tarjetas de balance del turno: Total recaudado, Efectivo (caja chica), Tarjeta/Terminal y Conteo de habitaciones. |
+| Notificación con Deshacer | `.toast`, `#toast`, `.toast-undo-btn` | Aviso contextual emergente con botón de acción reversa para mitigar errores de clic rápido. |
 
 ## Reglas de interacción observadas
 

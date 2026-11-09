@@ -14,9 +14,11 @@ Fecha de instantánea: 6 de octubre de 2026.
 - Catálogos de hoteles, recepción, personal y turnos de limpieza, tipos, tarifas y habitaciones.
 - Autenticación basada en cuenta Google activa y registro `Usuarios`; permisos por rol.
 - Turnos de recepción, entradas/salidas, pagos al ingreso, cambios/cancelaciones/ediciones, personas extra, limpieza, correcciones y reporte del turno abierto.
-- Web App en Apps Script con TypeScript/HTML; libro maestro de Sheets; emulador local Docker con datos ficticios.
-- Vercel configurado en `project.config.json` y `vercel-entrypoint/` como redirect hacia Apps Script.
-- Inventario, ventas, cargos/consumos, mantenimiento operativo y corte de caja no tienen flujo funcional completo encontrado en la aplicación.
+- Módulo de inventario, catálogo de productos con 9 categorías fijas de menú, existencias en Bodega y Anaquel, traspasos, correcciones físicas y auditoría de movimientos.
+- Registro de ventas y consumos a habitación con descuento automático de anaquel, vinculación con `Ventas`, `Cargos` y `Pagos`, y cuenta de estancia `StayAccount`.
+- Salida de habitación con validación y liquidación obligatoria de saldo pendiente.
+- Capa de datos firme: caché por ejecución, escrituras atómicas de fila completa en Sheets, fechas ISO normalizadas e idempotencia transversal con hoja `Operaciones` (`runIdempotent_`).
+- Rediseño de interfaz minimalista estilo Steve Jobs: barra superior única de 52px (Habitaciones, Tienda, Corte, reloj, turno, ajustes ⚙), panel lateral unificado `Sheet` para asignación de camaristas en 1 clic con toast de deshacer, finalización de limpieza en 1 clic, cuenta de estancia con catálogo de consumo embebido, tienda con tabla limpia clicable y resumen de corte financiero.
 
 ## Riesgos y trabajo no verificado
 

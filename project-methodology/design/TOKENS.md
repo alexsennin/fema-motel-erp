@@ -1,21 +1,23 @@
-# Tokens CSS FEMA (observados)
+# Tokens CSS FEMA (Implementados)
 
-Fuente: `:root` de `src/client/Index.html`. Valores describen implementación, no una paleta de marca aprobada.
+Fuente: `:root` de `src/client/Index.html`.
 
 | Token / uso | Valor |
 |---|---|
-| Tipografía base | `Inter, system-ui, -apple-system, "Segoe UI", sans-serif` |
-| Texto principal | `#172033` |
-| Fondo | `#f4f7fb` |
-| Navegación / encabezado | `#173a5e` |
-| Acción azul | `#1f6fa8` |
-| Divisor | `#dbe3ed` |
-| Texto secundario | `#66758a` |
-| Error/acción destructiva | `#b42318` |
-| Estado disponible | `#3d8b40` |
-| Estado ocupada | `#c62828` |
-| Estado sucia | `#f9a825` |
-| Estado limpieza | `#1565c0` |
-| Estado mantenimiento | `#424242` |
-
-Radios, sombras, espaciado y alturas están escritos directamente en reglas CSS; no hay tokens semánticos dedicados para esos valores.
+| Tipografía base | `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif` |
+| Fondo de pantalla (`--bg`) | `#f8fafc` |
+| Superficie / Cards (`--surface`) | `#ffffff` |
+| Texto principal (`--text`) | `#0f172a` |
+| Texto secundario (`--text-2`) | `#64748b` |
+| Línea divisoria (`--line`) | `#e2e8f0` |
+| Acento primario (`--accent`) | `#0071E3` |
+| Navegación (`--nav`) | `#112740` |
+| Estado disponible (`--st-free`) | `#34C759` |
+| Estado ocupada (`--st-busy`) | `#FF3B30` |
+| Estado sucia (`--st-dirty`) | `#FF9F0A` |
+| Estado en limpieza (`--st-clean`) | `#0A84FF` |
+| Estado vencida (`--st-late`) | `#AF52DE` |
+| Radio de tarjeta (`--r-card`) | `12px` |
+| Radio de botón (`--r-btn`) | `10px` |
+| Espaciadores (`--s-1`..`--s-6`) | `4px`, `8px`, `12px`, `16px`, `24px`, `32px` |
+| Sombras (`--shadow-sm/md/lg`) | `0 1px 2px rgba(0,0,0,0.04)` / `0 4px 14px rgba(0,0,0,0.06)` / `0 12px 32px rgba(0,0,0,0.10)` |

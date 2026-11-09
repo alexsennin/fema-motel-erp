@@ -4,9 +4,9 @@ FEMA es una Web App para administrar catálogos y el flujo operativo de habitaci
 
 ## Estado funcional
 
-El código actual incluye catálogos de hoteles, recepción, personal/horarios de limpieza, tipos, tarifas y habitaciones; turnos; rentas/entradas, salidas, cambios de habitación, cancelaciones, ediciones/personas extra, limpieza, correcciones y reporte del turno abierto. No están implementados todavía inventario, ventas, cargos/consumos, mantenimiento operativo ni corte de caja. La presencia de pestañas reservadas en Sheets no significa que exista un módulo de aplicación.
+El código actual incluye catálogos de hoteles, recepción, personal/horarios de limpieza, tipos, tarifas y habitaciones; turnos; rentas/entradas, salidas condicionadas a liquidación, cambios de habitación, cancelaciones, ediciones/personas extra, asignación y finalización de limpieza en 1 clic; módulo de inventario con 68 productos, control de existencias en bodega y anaquel, traspasos, correcciones físicas y auditoría; registro de ventas a habitación acopladas a la cuenta de estancia (`StayAccount`); y corte de turno con balance financiero. Mantenimiento operativo y turnos históricos cerrados quedan para fases posteriores.
 
-La autenticación vigente usa la cuenta Google activa y valida al usuario en la hoja `Usuarios`. El personal no inicia sesión con credenciales propias en esta versión.
+La autenticación vigente usa la cuenta Google activa y valida al usuario en la hoja `Usuarios`. El acceso por PIN de 6 dígitos permanece en fase de prueba interna y no está activado para producción.
 
 ## Fuentes y entornos
 
