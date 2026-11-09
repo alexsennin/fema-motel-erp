@@ -132,10 +132,16 @@ interface EntryResult {
   fechaHoraSalidaPrevista: string;
 }
 
+interface ExitCobroInput {
+  formaPago: "EFECTIVO" | "TARJETA";
+  monto: number;
+}
+
 interface ExitInput {
   idHabitacion: string;
-  observaciones: string;
+  observaciones?: string;
   idempotencyKey: string;
+  cobro?: ExitCobroInput;
 }
 
 interface ExitResult {
@@ -256,6 +262,7 @@ interface ProductInventoryItem {
   stockBodega: number;
   stockAnaquel: number;
   stockTotal: number;
+  stockMinimo: number;
 }
 
 interface InventoryMovementRecord {
@@ -292,9 +299,43 @@ interface RegisterSaleInput {
 
 interface RegisterSaleResult {
   idCargo: string;
+  idVenta?: string;
   total: number;
   habitacion: string;
   itemsVendidos: number;
+}
+
+interface StayAccountConsumption {
+  idCargo: string;
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+  total: number;
+  estado: string;
+  fechaHora: string;
+}
+
+interface StayAccountPayment {
+  idPago: string;
+  formaPago: string;
+  monto: number;
+  concepto: string;
+  fechaHora: string;
+}
+
+interface StayAccount {
+  idEstancia: string;
+  idHabitacion: string;
+  numeroHabitacion: string;
+  renta: number;
+  personasExtra: number;
+  totalRenta: number;
+  consumos: StayAccountConsumption[];
+  totalConsumos: number;
+  pagos: StayAccountPayment[];
+  totalPagos: number;
+  saldo: number;
+  estadoEstancia: string;
 }
 
 interface TransferInventoryInput {
@@ -302,6 +343,7 @@ interface TransferInventoryInput {
   cantidad: number;
   direccion: "BODEGA_A_ANAQUEL" | "ANAQUEL_A_BODEGA";
   motivo?: string;
+  idempotencyKey?: string;
 }
 
 interface AdjustInventoryInput {
@@ -309,6 +351,7 @@ interface AdjustInventoryInput {
   ubicacion: "BODEGA" | "ANAQUEL";
   nuevoStock: number;
   motivo: string;
+  idempotencyKey?: string;
 }
 
 interface SaveProductInput {
@@ -319,6 +362,7 @@ interface SaveProductInput {
   costoUnitario?: number;
   stockBodegaInicial?: number;
   stockAnaquelInicial?: number;
+  idempotencyKey?: string;
 }
 
 interface OccupiedRoomOption {

@@ -98,11 +98,7 @@ function assertCleaningStaffOnCurrentShift_(staff: SheetRow, idMotel: string): v
 
 function assignCleaning_(user: FemaUser, input: CleaningAssignmentInput): CleaningAssignmentResult {
   assertPermission_(user, "PER-HAB-GEST");
-  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
-
-  return withScriptLock_(() => {
-    const duplicate = readRows_(FEMA_CONFIG.sheets.audit).find((row) => String(row.Motivo) === input.idempotencyKey);
-    if (duplicate) throw new Error("Esta operación ya fue registrada.");
+  return runIdempotent_(user, input.idempotencyKey, "ASIGNAR_LIMPIEZA", () => {
     const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
     if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
     if (String(room.EstadoActual) !== "SUCIA" || !room.IdCicloActual) throw new Error("La habitación ya no está sucia o no tiene un ciclo activo.");
@@ -144,10 +140,7 @@ function assignCleaning_(user: FemaUser, input: CleaningAssignmentInput): Cleani
 
 function completeCleaning_(user: FemaUser, input: CleaningCompletionInput): CleaningCompletionResult {
   assertPermission_(user, "PER-HAB-GEST");
-  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
-  return withScriptLock_(() => {
-    const duplicate = readRows_(FEMA_CONFIG.sheets.audit).find((row) => String(row.Motivo) === input.idempotencyKey);
-    if (duplicate) throw new Error("Esta operación ya fue registrada.");
+  return runIdempotent_(user, input.idempotencyKey, "FINALIZAR_LIMPIEZA", () => {
     const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
     if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
     if (String(room.EstadoActual) !== "LIMPIEZA" || !room.IdCicloActual) throw new Error("La habitación ya no se encuentra en limpieza.");
@@ -220,14 +213,12 @@ function listRentalReport_(user: FemaUser): RentalReportRow[] {
 
 function addExtraPerson_(user: FemaUser, input: AddExtraPersonInput): AddExtraPersonResult {
   assertPermission_(user, "PER-HAB-GEST");
-  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
   const quantity = Number(input.cantidad);
   const observations = String(input.observaciones ?? "").trim();
   if (!Number.isInteger(quantity) || quantity < 1) throw new Error("La cantidad debe ser un número entero mayor que cero.");
   if (!observations) throw new Error("Las observaciones son obligatorias.");
   if (observations.length > 300) throw new Error("Las observaciones no pueden superar 300 caracteres.");
-  return withScriptLock_(() => {
-    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+  return runIdempotent_(user, input.idempotencyKey, "AGREGAR_PERSONA_EXTRA", () => {
     const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
     if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel || String(room.EstadoActual) !== "OCUPADA" || !room.IdCicloActual) throw new Error("La habitación ya no está ocupada.");
     const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === String(room.IdCicloActual) && String(row.IdHabitacionActual) === input.idHabitacion && String(row.EstadoEstancia) === "ACTIVA");
@@ -258,7 +249,6 @@ function addExtraPerson_(user: FemaUser, input: AddExtraPersonInput): AddExtraPe
 
 function editActiveStay_(user: FemaUser, input: EditActiveStayInput): EditActiveStayResult {
   assertPermission_(user, "PER-HAB-GEST");
-  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
   const observations = String(input.observaciones ?? "").trim();
   const extraPeople = Number(input.personasExtra);
   const finalPrice = Number(input.precioFinal);
@@ -271,8 +261,7 @@ function editActiveStay_(user: FemaUser, input: EditActiveStayInput): EditActive
   if (!Number.isFinite(finalPrice) || finalPrice < 0) throw new Error("El importe final debe ser igual o mayor que cero.");
   if (Number.isNaN(expectedExit.getTime())) throw new Error("Indica una fecha y hora de salida válida.");
   if (vehicle.length > 100 || plates.length > 15) throw new Error("Revisa la longitud de los datos del vehículo.");
-  return withScriptLock_(() => {
-    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+  return runIdempotent_(user, input.idempotencyKey, "EDITAR_ESTANCIA", () => {
     const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
     if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel || String(room.EstadoActual) !== "OCUPADA" || !room.IdCicloActual) throw new Error("La habitación ya no está ocupada.");
     const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === String(room.IdCicloActual) && String(row.IdHabitacionActual) === input.idHabitacion && String(row.EstadoEstancia) === "ACTIVA");
@@ -298,10 +287,8 @@ function editActiveStay_(user: FemaUser, input: EditActiveStayInput): EditActive
 
 function transferOccupiedRoom_(user: FemaUser, input: TransferRoomInput): TransferRoomResult {
   assertPermission_(user, "PER-HAB-GEST");
-  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
   if (!input.idHabitacionOrigen || !input.idHabitacionDestino || input.idHabitacionOrigen === input.idHabitacionDestino) throw new Error("Selecciona una habitación destino diferente.");
-  return withScriptLock_(() => {
-    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+  return runIdempotent_(user, input.idempotencyKey, "CAMBIAR_HABITACION", () => {
     const origin = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacionOrigen);
     const destination = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacionDestino);
     if (!origin || !destination || isExampleRow_(origin) || isExampleRow_(destination) || String(origin.IdMotel) !== user.idMotel || String(destination.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
@@ -341,12 +328,10 @@ function transferOccupiedRoom_(user: FemaUser, input: TransferRoomInput): Transf
 
 function cancelOccupiedStay_(user: FemaUser, input: CancelStayInput): CancelStayResult {
   assertPermission_(user, "PER-HAB-GEST");
-  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
   const comment = String(input.comentario ?? "").trim();
   if (!comment) throw new Error("Escribe el motivo de la cancelación.");
   if (comment.length > 300) throw new Error("El motivo no puede superar 300 caracteres.");
-  return withScriptLock_(() => {
-    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+  return runIdempotent_(user, input.idempotencyKey, "CANCELAR_ESTANCIA", () => {
     const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
     if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel || String(room.EstadoActual) !== "OCUPADA" || !room.IdCicloActual) throw new Error("La habitación ya no está ocupada.");
     const stay = readRows_(FEMA_CONFIG.sheets.stays).find((row) => !isExampleRow_(row) && String(row.IdCiclo) === String(room.IdCicloActual) && String(row.IdHabitacionActual) === input.idHabitacion && String(row.EstadoEstancia) === "ACTIVA");
@@ -379,9 +364,7 @@ function cancelOccupiedStay_(user: FemaUser, input: CancelStayInput): CancelStay
 
 function undoRoomState_(user: FemaUser, input: UndoRoomStateInput): UndoRoomStateResult {
   assertPermission_(user, "PER-HAB-GEST");
-  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
-  return withScriptLock_(() => {
-    if (readRows_(FEMA_CONFIG.sheets.audit).some((row) => String(row.Motivo) === input.idempotencyKey)) throw new Error("Esta operación ya fue registrada.");
+  return runIdempotent_(user, input.idempotencyKey, "DESHACER_ESTADO", () => {
     const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
     if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel || !room.IdCicloActual) throw new Error("Habitación no encontrada o sin ciclo activo.");
     const state = String(room.EstadoActual);
@@ -438,14 +421,10 @@ function undoRoomState_(user: FemaUser, input: UndoRoomStateInput): UndoRoomStat
 
 function registerExit_(user: FemaUser, input: ExitInput): ExitResult {
   assertPermission_(user, "PER-HAB-GEST");
-  if (!input.idempotencyKey) throw new Error("Falta la clave de idempotencia de la operación.");
   const observations = String(input.observaciones ?? "").trim();
   if (observations.length > 300) throw new Error("Las observaciones no pueden superar 300 caracteres.");
 
-  return withScriptLock_(() => {
-    const duplicate = readRows_(FEMA_CONFIG.sheets.audit).find((row) => String(row.Motivo) === input.idempotencyKey);
-    if (duplicate) throw new Error("Esta operación ya fue registrada.");
-
+  return runIdempotent_(user, input.idempotencyKey, "REGISTRAR_SALIDA", () => {
     const room = findRowById_(FEMA_CONFIG.sheets.rooms, "IdHabitacion", input.idHabitacion);
     if (!room || isExampleRow_(room) || String(room.IdMotel) !== user.idMotel) throw new Error("Habitación no encontrada.");
     if (String(room.EstadoActual) !== "OCUPADA" || !room.IdCicloActual) throw new Error("La habitación ya no está ocupada o no tiene un ciclo activo.");
@@ -457,8 +436,43 @@ function registerExit_(user: FemaUser, input: ExitInput): ExitResult {
     const shift = requireOpenShiftForUser_(user);
     const shiftId = String(shift.IdTurno);
     const finishedAt = now_();
+    const stayId = String(stay.IdEstancia);
+    const totalRenta = Number(stay.PrecioFinal || 0);
 
-    updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", String(stay.IdEstancia), {
+    const charges = readRows_(FEMA_CONFIG.sheets.charges)
+      .filter((c) => !isExampleRow_(c) && String(c.IdEstancia) === stayId);
+    const totalConsumos = charges.reduce((acc, c) => acc + (Number(c.Total) || 0), 0);
+
+    const payments = readRows_(FEMA_CONFIG.sheets.payments)
+      .filter((p) => !isExampleRow_(p) && String(p.IdEstancia) === stayId && String(p.Estado) === "APLICADO");
+    const totalPagos = payments.reduce((acc, p) => acc + (Number(p.Monto) || 0), 0);
+
+    const saldo = Math.max(0, Math.round((totalRenta + totalConsumos - totalPagos) * 100) / 100);
+    if (saldo > 0) {
+      if (!input.cobro || Math.abs(input.cobro.monto - saldo) > 0.01) {
+        throw new Error(`La habitación tiene saldo pendiente de $${saldo.toFixed(2)}. Debe liquidar la cuenta para registrar la salida.`);
+      }
+
+      appendRow_(FEMA_CONFIG.sheets.payments, {
+        IdPago: newId_("PAG"),
+        IdEstancia: stayId,
+        IdTurno: shiftId,
+        FechaHora: finishedAt,
+        FormaPago: input.cobro.formaPago || "EFECTIVO",
+        Monto: input.cobro.monto,
+        Referencia: "SALDO_SALIDA",
+        IdUsuario: user.idUsuario,
+        Estado: "APLICADO",
+        IdMotel: user.idMotel,
+        Concepto: "SALDO_SALIDA"
+      });
+
+      charges.filter((c) => String(c.Estado) === "PENDIENTE").forEach((c) => {
+        updateRowById_(FEMA_CONFIG.sheets.charges, "IdCargo", String(c.IdCargo), { Estado: "COBRADO" });
+      });
+    }
+
+    updateRowById_(FEMA_CONFIG.sheets.stays, "IdEstancia", stayId, {
       FechaHoraSalidaReal: finishedAt,
       EstadoEstancia: "FINALIZADA"
     });
@@ -685,7 +699,7 @@ function registerEntry_(user: FemaUser, input: EntryInput): EntryResult {
   }
   const signature = entryRequestSignature_(user, input);
 
-  return withScriptLock_(() => {
+  return runIdempotent_(user, idempotencyKey, "REGISTRAR_ENTRADA", () => {
     const duplicate = readRows_(FEMA_CONFIG.sheets.audit).find((row) => String(row.Motivo) === idempotencyKey);
     if (duplicate) return replayEntry_(user, duplicate, signature, vehicle, plates);
 

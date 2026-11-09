@@ -5,193 +5,192 @@ function doGet(): GoogleAppsScript.HTML.HtmlOutput {
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
 }
 
-function apiGetInitialState(): ApiResponse<InitialState> {
+function handleApi_<T>(action: () => T): ApiResponse<T> {
+  clearRowsCache_();
   try {
-    const user = getCurrentUser_();
-    seedMenuIfEmpty_(user.idMotel, user);
-    return {
-      ok: true,
-      data: {
-        user,
-        generatedAt: Utilities.formatDate(now_(), FEMA_CONFIG.timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX"),
-        rooms: listRoomCards_(user),
-        entryRates: listEntryRates_(user),
-        vehicleSuggestions: listVehicleSuggestions_(user),
-        cleaningStaff: listCleaningStaffOptions_(user),
-        shift: getShiftState_(user)
-      }
-    };
+    return { ok: true, data: action() };
   } catch (error) {
     return apiError_(error);
   }
+}
+
+function apiGetInitialState(): ApiResponse<InitialState> {
+  return handleApi_(() => {
+    const user = getCurrentUser_();
+    return {
+      user,
+      generatedAt: Utilities.formatDate(now_(), FEMA_CONFIG.timeZone, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+      rooms: listRoomCards_(user),
+      entryRates: listEntryRates_(user),
+      vehicleSuggestions: listVehicleSuggestions_(user),
+      cleaningStaff: listCleaningStaffOptions_(user),
+      shift: getShiftState_(user)
+    };
+  });
 }
 
 function apiOpenShift(): ApiResponse<ShiftState> {
-  try { return { ok: true, data: openShift_(getCurrentUser_()) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => openShift_(getCurrentUser_()));
 }
 
 function apiCloseShift(idTurno: string): ApiResponse<ShiftState> {
-  try { return { ok: true, data: closeShift_(getCurrentUser_(), idTurno) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => closeShift_(getCurrentUser_(), idTurno));
 }
 
 function apiRegisterEntry(input: EntryInput): ApiResponse<EntryResult> {
-  try {
-    return { ok: true, data: registerEntry_(getCurrentUser_(), input) };
-  } catch (error) {
-    return apiError_(error);
-  }
+  return handleApi_(() => registerEntry_(getCurrentUser_(), input));
 }
 
 function apiRegisterExit(input: ExitInput): ApiResponse<ExitResult> {
-  try { return { ok: true, data: registerExit_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => registerExit_(getCurrentUser_(), input));
 }
 
 function apiAddExtraPerson(input: AddExtraPersonInput): ApiResponse<AddExtraPersonResult> {
-  try { return { ok: true, data: addExtraPerson_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => addExtraPerson_(getCurrentUser_(), input));
 }
 
 function apiEditActiveStay(input: EditActiveStayInput): ApiResponse<EditActiveStayResult> {
-  try { return { ok: true, data: editActiveStay_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => editActiveStay_(getCurrentUser_(), input));
 }
 
 function apiTransferRoom(input: TransferRoomInput): ApiResponse<TransferRoomResult> {
-  try { return { ok: true, data: transferOccupiedRoom_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => transferOccupiedRoom_(getCurrentUser_(), input));
 }
 
 function apiCancelStay(input: CancelStayInput): ApiResponse<CancelStayResult> {
-  try { return { ok: true, data: cancelOccupiedStay_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => cancelOccupiedStay_(getCurrentUser_(), input));
 }
 
 function apiUndoRoomState(input: UndoRoomStateInput): ApiResponse<UndoRoomStateResult> {
-  try { return { ok: true, data: undoRoomState_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => undoRoomState_(getCurrentUser_(), input));
 }
 
 function apiAssignCleaning(input: CleaningAssignmentInput): ApiResponse<CleaningAssignmentResult> {
-  try { return { ok: true, data: assignCleaning_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => assignCleaning_(getCurrentUser_(), input));
 }
 
 function apiCompleteCleaning(input: CleaningCompletionInput): ApiResponse<CleaningCompletionResult> {
-  try { return { ok: true, data: completeCleaning_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => completeCleaning_(getCurrentUser_(), input));
 }
 
 function apiGetRentalReport(): ApiResponse<RentalReportRow[]> {
-  try { return { ok: true, data: listRentalReport_(getCurrentUser_()) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => listRentalReport_(getCurrentUser_()));
 }
 
 function apiGetCatalogs(): ApiResponse<CatalogState> {
-  try { return { ok: true, data: listCatalogs_(getCurrentUser_()) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => listCatalogs_(getCurrentUser_()));
 }
 
 function apiSaveMotel(input: MotelInput): ApiResponse<{ id: string }> {
-  try { return { ok: true, data: { id: saveMotel_(getCurrentUser_(), input) } }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => ({ id: saveMotel_(getCurrentUser_(), input) }));
 }
 
 function apiSetMotelActive(id: string, active: boolean): ApiResponse<null> {
-  try { setMotelActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => {
+    setMotelActive_(getCurrentUser_(), id, active);
+    return null;
+  });
 }
 
 function apiSaveReceptionist(input: ReceptionistInput): ApiResponse<{ id: string }> {
-  try { return { ok: true, data: { id: saveReceptionist_(getCurrentUser_(), input) } }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => ({ id: saveReceptionist_(getCurrentUser_(), input) }));
 }
 
 function apiSetReceptionistActive(id: string, active: boolean): ApiResponse<null> {
-  try { setReceptionistActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => {
+    setReceptionistActive_(getCurrentUser_(), id, active);
+    return null;
+  });
 }
 
 function apiSaveCleaningStaff(input: CleaningStaffInput): ApiResponse<{ id: string }> {
-  try { return { ok: true, data: { id: saveCleaningStaff_(getCurrentUser_(), input) } }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => ({ id: saveCleaningStaff_(getCurrentUser_(), input) }));
 }
 
 function apiSetCleaningStaffActive(id: string, active: boolean): ApiResponse<null> {
-  try { setCleaningStaffActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => {
+    setCleaningStaffActive_(getCurrentUser_(), id, active);
+    return null;
+  });
 }
 
 function apiSaveCleaningShift(input: CleaningShiftInput): ApiResponse<{ id: string }> {
-  try { return { ok: true, data: { id: saveCleaningShift_(getCurrentUser_(), input) } }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => ({ id: saveCleaningShift_(getCurrentUser_(), input) }));
 }
 
 function apiSaveRoomType(input: RoomTypeInput): ApiResponse<{ id: string }> {
-  try { return { ok: true, data: { id: saveRoomType_(getCurrentUser_(), input) } }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => ({ id: saveRoomType_(getCurrentUser_(), input) }));
 }
 
 function apiSetRoomTypeActive(id: string, active: boolean): ApiResponse<null> {
-  try { setRoomTypeActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => {
+    setRoomTypeActive_(getCurrentUser_(), id, active);
+    return null;
+  });
 }
 
 function apiSaveRate(input: RateInput): ApiResponse<{ id: string }> {
-  try { return { ok: true, data: { id: saveRate_(getCurrentUser_(), input) } }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => ({ id: saveRate_(getCurrentUser_(), input) }));
 }
 
 function apiSetRateActive(id: string, active: boolean): ApiResponse<null> {
-  try { setRateActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => {
+    setRateActive_(getCurrentUser_(), id, active);
+    return null;
+  });
 }
 
 function apiSaveRoom(input: RoomInput): ApiResponse<{ id: string }> {
-  try { return { ok: true, data: { id: saveRoom_(getCurrentUser_(), input) } }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => ({ id: saveRoom_(getCurrentUser_(), input) }));
 }
 
 function apiSetRoomActive(id: string, active: boolean): ApiResponse<null> {
-  try { setRoomActive_(getCurrentUser_(), id, active); return { ok: true, data: null }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => {
+    setRoomActive_(getCurrentUser_(), id, active);
+    return null;
+  });
 }
 
 function apiGetProductsAndInventory(): ApiResponse<ProductInventoryItem[]> {
-  try { return { ok: true, data: getProductsAndInventory_(getCurrentUser_()) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => getProductsAndInventory_(getCurrentUser_()));
 }
 
 function apiGetOccupiedRoomsForSale(): ApiResponse<OccupiedRoomOption[]> {
-  try { return { ok: true, data: getOccupiedRoomsForSale_(getCurrentUser_()) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => getOccupiedRoomsForSale_(getCurrentUser_()));
+}
+
+function apiGetStayAccount(idHabitacion: string): ApiResponse<StayAccount> {
+  return handleApi_(() => getStayAccount_(getCurrentUser_(), idHabitacion));
 }
 
 function apiSaveProduct(input: SaveProductInput): ApiResponse<{ id: string }> {
-  try { return { ok: true, data: saveProduct_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => saveProduct_(getCurrentUser_(), input));
 }
 
 function apiTransferInventory(input: TransferInventoryInput): ApiResponse<null> {
-  try { transferInventory_(getCurrentUser_(), input); return { ok: true, data: null }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => {
+    transferInventory_(getCurrentUser_(), input);
+    return null;
+  });
 }
 
 function apiAdjustInventory(input: AdjustInventoryInput): ApiResponse<null> {
-  try { adjustInventory_(getCurrentUser_(), input); return { ok: true, data: null }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => {
+    adjustInventory_(getCurrentUser_(), input);
+    return null;
+  });
 }
 
 function apiRegisterRoomSale(input: RegisterSaleInput): ApiResponse<RegisterSaleResult> {
-  try { return { ok: true, data: registerSaleToRoom_(getCurrentUser_(), input) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => registerSaleToRoom_(getCurrentUser_(), input));
 }
 
 function apiGetInventoryMovements(): ApiResponse<InventoryMovementRecord[]> {
-  try { return { ok: true, data: getInventoryMovements_(getCurrentUser_()) }; }
-  catch (error) { return apiError_(error); }
+  return handleApi_(() => getInventoryMovements_(getCurrentUser_()));
+}
+
+function apiAdminRepairInventory(): ApiResponse<{ productos: number }> {
+  return handleApi_(() => adminRepairInventory_(getCurrentUser_()));
 }
 
 function apiError_<T>(error: unknown): ApiResponse<T> {

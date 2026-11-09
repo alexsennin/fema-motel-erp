@@ -6,36 +6,55 @@
   <title>FEMA · Gestión Hotelera</title>
   <style>
     :root {
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      color: #172033;
-      background: #f1f5f9;
+      font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif;
+      color: #1D1D1F;
+      background: #F5F5F7;
+      --bg: #F5F5F7;
+      --surface: #FFFFFF;
+      --text: #1D1D1F;
+      --text-2: #6E6E73;
+      --line: #E5E5EA;
+      --line-subtle: #F2F2F7;
+      --muted: #6E6E73;
+      --accent: #0071E3;
+      --accent-hover: #0077ED;
+      --accent-subtle: #EBF5FF;
+      --st-free: #34C759;
+      --st-busy: #FF3B30;
+      --st-dirty: #FF9F0A;
+      --st-clean: #0A84FF;
+      --st-late: #AF52DE;
+      --r-card: 12px;
+      --r-btn: 10px;
+      --s-1: 4px;
+      --s-2: 8px;
+      --s-3: 12px;
+      --s-4: 16px;
+      --s-5: 24px;
+      --s-6: 32px;
       --nav: #112740;
       --nav-surface: #173a5e;
-      --blue: #1f6fa8;
-      --blue-hover: #165b8c;
-      --blue-subtle: #e8f2fa;
-      --line: #cbd5e1;
-      --line-subtle: #e2e8f0;
-      --muted: #64748b;
-      --surface: #ffffff;
-      --danger: #b42318;
-      --danger-bg: #fef2f2;
-      --status-available: #2e7d32;
-      --status-available-bg: #dcfce7;
-      --status-occupied: #b71c1c;
-      --status-occupied-bg: #fee2e2;
-      --status-dirty: #c67d00;
-      --status-dirty-bg: #fef3c7;
-      --status-cleaning: #1565c0;
-      --status-cleaning-bg: #dbeafe;
-      --status-maintenance: #475569;
-      --status-maintenance-bg: #f1f5f9;
-      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-      --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-      --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
-      --radius-sm: 4px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
+      --blue: #0071E3;
+      --blue-hover: #0077ED;
+      --blue-subtle: #EBF5FF;
+      --danger: #FF3B30;
+      --danger-bg: #FEF2F2;
+      --status-available: #34C759;
+      --status-available-bg: #E8F8ED;
+      --status-occupied: #FF3B30;
+      --status-occupied-bg: #FEECEB;
+      --status-dirty: #FF9F0A;
+      --status-dirty-bg: #FFF5E5;
+      --status-cleaning: #0A84FF;
+      --status-cleaning-bg: #E6F2FF;
+      --status-maintenance: #6E6E73;
+      --status-maintenance-bg: #F5F5F7;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.10);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
     }
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -48,123 +67,50 @@
     }
     button, input, select, textarea { font: inherit; }
 
-    /* Header & Branding (Compact & Sleek) */
-    header {
-      background: linear-gradient(135deg, var(--nav) 0%, var(--nav-surface) 100%);
+    /* Unified App Bar (52px) — Steve Jobs Minimalist Style (T-30, T-31) */
+    header.app-bar {
+      background: var(--nav);
       color: #fff;
-      padding: 10px 20px;
+      height: 52px;
+      min-height: 52px;
+      padding: 0 16px;
       display: flex;
       justify-content: space-between;
-      gap: 14px;
       align-items: center;
-      box-shadow: 0 2px 6px rgba(17, 39, 64, 0.15);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 100;
     }
-    .brand-wrap { display: flex; align-items: center; gap: 10px; }
+    .app-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
     .brand-logo {
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.15);
       border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: var(--radius-md);
-      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      padding: 3px 8px;
       font-weight: 800;
-      font-size: 15px;
+      font-size: 14px;
       letter-spacing: .08em;
       color: #fff;
     }
-    .brand-info h1 { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.2; }
-    .brand-info p { margin: 1px 0 0; opacity: .8; font-size: 11.5px; font-weight: 400; }
-    .header-meta { display: flex; align-items: center; gap: 12px; }
-    .clock-badge {
-      background: rgba(255, 255, 255, 0.09);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      color: #e2e8f0;
+    .app-nav {
       display: flex;
       align-items: center;
-      gap: 6px;
-    }
-    .user-pill {
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      border-radius: 999px;
-      padding: 4px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .user-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; display: inline-block; }
-
-    /* Header Shift Controls */
-    .header-shift-slot { display: flex; align-items: center; gap: 8px; }
-    .header-shift-btn {
-      border: 1px solid transparent;
+      gap: 3px;
+      background: rgba(0, 0, 0, 0.22);
+      padding: 3px;
       border-radius: var(--radius-md);
-      padding: 5px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      line-height: 1.2;
-      transition: all 0.15s ease;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-    }
-    .header-shift-btn.close-shift {
-      background: #dc2626;
-      color: #ffffff;
-      border-color: #ef4444;
-    }
-    .header-shift-btn.close-shift:hover:not(:disabled) {
-      background: #b91c1c;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-    }
-    .header-shift-btn.open {
-      background: #16a34a;
-      color: #ffffff;
-      border-color: #22c55e;
-    }
-    .header-shift-btn.open:hover:not(:disabled) {
-      background: #15803d;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-    }
-    .header-shift-badge.readonly {
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      color: #f1f5f9;
-      padding: 4px 10px;
-      border-radius: var(--radius-md);
-      font-size: 11.5px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    /* Navigation Bar */
-    nav {
-      display: flex;
-      gap: 6px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--line-subtle);
-      padding: 6px 20px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
     }
     .nav-btn {
       border: 0;
       background: transparent;
-      padding: 6px 14px;
-      border-radius: var(--radius-md);
-      color: #475569;
+      padding: 5px 14px;
+      border-radius: var(--radius-sm);
+      color: #94a3b8;
       cursor: pointer;
       font-weight: 600;
       font-size: 13px;
@@ -173,8 +119,471 @@
       gap: 6px;
       transition: all .15s ease;
     }
-    .nav-btn:hover { background: #f1f5f9; color: var(--nav); }
-    .nav-btn.active { background: var(--blue-subtle); color: var(--blue); font-weight: 700; }
+    .nav-btn:hover { color: #f8fafc; }
+    .nav-btn.active {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+    .app-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .clock-badge {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11.5px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .user-pill {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .user-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; display: inline-block; }
+    .header-shift-slot { display: flex; align-items: center; gap: 6px; }
+    .header-shift-btn {
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      line-height: 1.2;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .header-shift-btn.close-shift {
+      background: #dc2626;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+    .header-shift-btn.close-shift:hover:not(:disabled) {
+      background: #b91c1c;
+    }
+    .header-shift-btn.open {
+      background: #16a34a;
+      color: #ffffff;
+      border-color: #22c55e;
+    }
+    .header-shift-btn.open:hover:not(:disabled) {
+      background: #15803d;
+    }
+    .header-shift-badge.readonly {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .settings-wrap { position: relative; }
+    .settings-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e2e8f0;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all .15s;
+    }
+    .settings-btn:hover { background: rgba(255, 255, 255, 0.22); color: #fff; }
+    .settings-dropdown {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 4px;
+      min-width: 210px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .settings-dropdown[hidden] { display: none !important; }
+    .settings-item {
+      background: transparent;
+      border: 0;
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #1e293b;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-item:hover { background: #f1f5f9; color: var(--blue); }
+
+    /* Staff Picker Sheet Styles (T-43) */
+    .staff-picker-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .staff-picker-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+    .staff-picker-btn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+    .staff-picker-btn:hover:not(:disabled) {
+      border-color: var(--blue);
+      background: var(--blue-subtle);
+      transform: translateX(2px);
+    }
+    .staff-picker-btn.busy { opacity: 0.6; }
+    .staff-picker-info { display: flex; flex-direction: column; gap: 3px; }
+    .staff-picker-name { font-size: 15px; font-weight: 700; color: #0f172a; }
+    .staff-picker-meta { font-size: 12px; color: #64748b; }
+    .staff-picker-arrow { font-size: 16px; color: var(--blue); font-weight: 700; }
+
+    /* Finish Cleaning Sheet (T-44) */
+    .clean-finish-wrap { display: flex; flex-direction: column; gap: 14px; }
+    .sheet-clean-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .clean-stat-box {
+      background: #f8fafc;
+      border: 1px solid var(--line-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .clean-stat-val { font-size: 20px; font-weight: 800; color: #1e293b; }
+    .clean-stat-lbl { font-size: 12px; color: #64748b; }
+    .clean-person-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+    .clean-person-lbl { color: #1e40af; font-weight: 600; }
+    .clean-person-val { color: #1e3a8a; font-weight: 700; }
+
+    /* Stay Account Sheet (T-41, T-42) */
+    .stay-info-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: #f1f5f9;
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+      font-size: 12.5px;
+    }
+    .stay-time-left { font-weight: 700; color: #334155; }
+    .stay-time-left.late { color: var(--danger); }
+    .stay-veh-badge { font-weight: 600; color: #475569; }
+    .stay-balance-card {
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      border: 1.5px solid transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .stay-balance-card.has-debt {
+      background: #fff1f2;
+      border-color: #fecdd3;
+    }
+    .stay-balance-card.has-debt .balance-title { color: #9f1239; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stay-balance-card.has-debt .balance-amount { color: #be123c; font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .stay-balance-card.has-debt .balance-subtitle { color: #e11d48; font-size: 12px; }
+    .stay-balance-card.paid {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+    .stay-balance-card.paid .balance-title { color: #166534; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stay-balance-card.paid .balance-amount { color: #15803d; font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .stay-balance-card.paid .balance-subtitle { color: #16a34a; font-size: 12px; }
+    .stay-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .stay-section-header h4 { margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; }
+    .stay-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .stay-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: #ffffff;
+      border: 1px solid var(--line-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+    }
+    .stay-item-desc { display: flex; flex-direction: column; gap: 2px; }
+    .stay-item-desc strong { color: #1e293b; }
+    .stay-item-val { font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; }
+    .stay-no-consumptions { font-size: 12px; padding: 10px; text-align: center; background: #f8fafc; border-radius: var(--radius-sm); border: 1px dashed var(--line); }
+
+    /* Embedded consumption picker (T-42) */
+    .sheet-picker-zone {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sheet-picker-chips {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .sheet-picker-chip {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .sheet-picker-chip.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .sheet-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .sheet-picker-item {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      transition: all 0.1s;
+    }
+    .sheet-picker-item:hover:not(:disabled) {
+      border-color: var(--blue);
+      background: #eff6ff;
+    }
+    .sheet-picker-item:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sheet-picker-item-name { font-size: 11.5px; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .sheet-picker-item-price { font-size: 12px; font-weight: 800; color: #16a34a; }
+    .sheet-picker-item-stock { font-size: 10px; color: #64748b; }
+
+    /* Clean Inventory Table (T-50, T-51, T-52) */
+    .inv-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid var(--line-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .inv-summary-text { font-size: 13px; color: #334155; }
+    .inv-summary-text strong { color: #0f172a; }
+    .inv-filter-pills { display: flex; gap: 4px; }
+    .inv-pill {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .inv-pill:hover { background: #e2e8f0; color: #0f172a; }
+    .inv-pill.active { background: #0f172a; border-color: #0f172a; color: #ffffff; }
+    .inventory-table-clean {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .inventory-table-clean th {
+      background: #f8fafc;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      border-bottom: 1px solid var(--line);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .inv-row-clickable {
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    .inv-row-clickable:hover { background: #f8fafc; }
+    .inv-row-clickable td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line-subtle);
+      vertical-align: middle;
+    }
+    .inv-prod-title { font-size: 13.5px; font-weight: 700; color: #0f172a; line-height: 1.25; }
+    .inv-prod-cat { font-size: 11px; font-weight: 600; color: #64748b; margin-top: 1px; }
+    .inv-prod-price { font-size: 14px; font-weight: 800; color: #16a34a; font-variant-numeric: tabular-nums; }
+    .inv-badge-anaquel {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    .inv-badge-anaquel.low {
+      background: #fffbeb;
+      color: #b45309;
+      border-color: #fde68a;
+    }
+    .inv-badge-anaquel.out {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+    .inv-badge-bodega {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    /* Product Sheet (T-51) */
+    .sheet-stock-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .sheet-stock-box {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .sheet-stock-box.low { background: #fffbeb; border-color: #fde68a; }
+    .sheet-stock-box.out { background: #fef2f2; border-color: #fecaca; }
+    .sheet-stock-val { font-size: 18px; font-weight: 800; color: #0f172a; }
+    .sheet-stock-lbl { font-size: 11px; color: #64748b; }
+    .sheet-badge-low { font-size: 10px; font-weight: 700; color: #b45309; text-transform: uppercase; }
+    .sheet-badge-out { font-size: 10px; font-weight: 700; color: #b91c1c; text-transform: uppercase; }
+    .sheet-section-box {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .sheet-section-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+    .sheet-stepper-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .stepper-wrap { display: flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+    .stepper-btn { background: #f8fafc; border: 0; width: 32px; height: 32px; font-size: 16px; font-weight: 700; cursor: pointer; color: #334155; }
+    .stepper-btn:hover:not(:disabled) { background: #e2e8f0; }
+    .stepper-wrap input { width: 44px; height: 32px; border: 0; text-align: center; font-size: 14px; font-weight: 700; }
+    .sheet-details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-top: 10px;
+    }
+    .sheet-details-summary { font-size: 12.5px; font-weight: 700; color: #475569; cursor: pointer; }
+
+    /* Corte / Shift Summary Grid (T-60) */
+    .corte-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .corte-card {
+      background: #ffffff;
+      border: 1px solid var(--line-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .corte-card-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
+    .corte-card-val { font-size: 20px; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; }
+    .corte-card-sub { font-size: 11px; color: #94a3b8; }
 
     /* Main Container (Aprovechamiento visual completo y pegado al menú superior) */
     main {
@@ -729,6 +1138,117 @@
       overscroll-behavior: contain;
       background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(4px);
+    }
+
+    /* COMPONENTE SHEET LATERAL MINIMALISTA (T-23) */
+    dialog.sheet:modal {
+      position: fixed;
+      inset: 0 0 0 auto;
+      width: 440px;
+      max-width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-left: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--surface);
+      box-shadow: -10px 0 35px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 9999;
+    }
+    .sheet-header {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background: #fafafc;
+    }
+    .sheet-title-zone h3 {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .sheet-title-zone p {
+      margin: 3px 0 0;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+    .sheet-close-btn {
+      background: transparent;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-2);
+      font-size: 18px;
+      transition: background 0.15s;
+    }
+    .sheet-close-btn:hover {
+      background: var(--line-subtle);
+      color: var(--text);
+    }
+    .sheet-body {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .sheet-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--line);
+      background: #fafafc;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sheet-primary-btn {
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: var(--r-btn);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .sheet-primary-btn:hover {
+      background: var(--accent-hover);
+    }
+    .sheet-more-link {
+      background: transparent;
+      border: none;
+      color: var(--text-2);
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      padding: 4px;
+    }
+    .sheet-more-link:hover {
+      color: var(--text);
+      text-decoration: underline;
+    }
+    @media (max-width: 767px) {
+      dialog.sheet:modal {
+        inset: auto 0 0 0;
+        width: 100vw;
+        height: 85vh;
+        max-height: 85vh;
+        border-left: none;
+        border-top: 1px solid var(--line);
+        border-radius: 16px 16px 0 0;
+      }
     }
 
     /* Modal de Carga y Espera Operativa (Apps Script RPC Feedback) */
@@ -1343,29 +1863,43 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand-wrap">
+  <!-- SVG ICON SPRITE (T-22) -->
+  <svg hidden>
+    <defs>
+      <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 9l2-5h10l2 5"/></symbol>
+      <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></symbol>
+      <symbol id="i-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 10 7.5-7.5"/><path d="m10 14-6 6a2 2 0 0 0 3 3l6-6"/><path d="m11 13 4 4"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></symbol>
+      <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- UNIFIED APP BAR (T-30, T-31) -->
+  <header class="app-bar">
+    <div class="app-bar-left">
       <div class="brand-logo">FEMA</div>
-      <div class="brand-info">
-        <h1>FEMA Motel ERP</h1>
-        <p>Control operativo y de recepción</p>
-      </div>
+      <nav class="app-nav">
+        <button class="nav-btn active" data-view="roomsView">Habitaciones</button>
+        <button class="nav-btn" data-view="inventoryView">Tienda</button>
+        <button class="nav-btn" data-view="rentalsView">Corte</button>
+      </nav>
     </div>
-    <div class="header-meta">
+    <div class="app-bar-right">
       <div id="liveClock" class="clock-badge">--:--:--</div>
       <div id="session" class="user-pill"><span class="user-dot"></span>Cargando sesión…</div>
       <div id="headerShiftSlot" class="header-shift-slot"></div>
+      <div class="settings-wrap">
+        <button type="button" class="settings-btn" id="settingsMenuBtn" aria-label="Ajustes y catálogos" title="Ajustes">⚙</button>
+        <div id="settingsMenu" class="settings-dropdown" hidden>
+          <button type="button" class="settings-item" id="menuCatalogsBtn">📋 Catálogos del sistema</button>
+          <button type="button" class="settings-item" id="menuRepairInvBtn">🔧 Reparar inventario</button>
+        </div>
+      </div>
     </div>
   </header>
-
-  <nav>
-    <button class="nav-btn active" data-view="roomsView">Habitaciones</button>
-    <button class="nav-btn" data-view="inventoryView">Inventario</button>
-    <button class="nav-btn" data-view="rentalsView">Reporte de rentas</button>
-    <button class="nav-btn" data-view="catalogs">Catálogos</button>
-    <div style="flex:1;"></div>
-    <button class="nav-btn nav-sale-btn" id="navOpenSaleBtn">🛒 Registrar Venta</button>
-  </nav>
 
   <main>
     <!-- VISTA OPERATIVA DE HABITACIONES (PRINCIPAL) -->
@@ -1373,82 +1907,66 @@
       <div id="rooms"><div class="message">Cargando habitaciones…</div></div>
     </section>
 
-    <!-- VISTA DE INVENTARIO Y CONTROL DE STOCK -->
+    <!-- VISTA DE TIENDA Y CONTROL DE STOCK (T-50, T-51, T-52) -->
     <section id="inventoryView" class="view" hidden>
       <div class="section-head">
         <div>
-          <h2>Inventario y Productos</h2>
-          <div class="muted">Catálogo completo de productos, precios y existencias en Bodega y Anaquel.</div>
+          <h2>Tienda y Control de Stock</h2>
+          <div class="muted">Catálogo de productos, existencias en anaquel para venta y bodega. Toca cualquier producto para gestionar.</div>
         </div>
         <div class="inventory-head-actions">
-          <button id="openNewProductBtn" class="btn primary">➕ Alta de Producto</button>
-          <button id="openTransferBtn" class="btn secondary">🔄 Traspaso Bodega ↔ Anaquel</button>
-          <button id="openAdjustBtn" class="btn secondary">⚖️ Corrección de Stock</button>
-          <button id="openMovementsBtn" class="btn secondary">📋 Ver Movimientos</button>
+          <button id="openNewProductBtn" class="btn primary">＋ Nuevo Producto</button>
         </div>
       </div>
 
-      <!-- Métricas de Inventario -->
-      <div class="inventory-metric-cards">
-        <div class="inv-card">
-          <span class="inv-card-val" id="invMetricTotalProds">0</span>
-          <span class="inv-card-lbl">Productos en Menú</span>
-        </div>
-        <div class="inv-card">
-          <span class="inv-card-val" id="invMetricTotalBodega">0</span>
-          <span class="inv-card-lbl">Stock en Bodega</span>
-        </div>
-        <div class="inv-card highlight">
-          <span class="inv-card-val" id="invMetricTotalAnaquel">0</span>
-          <span class="inv-card-lbl">Stock en Anaquel (Venta)</span>
-        </div>
-        <div class="inv-card alert">
-          <span class="inv-card-val" id="invMetricZeroAnaquel">0</span>
-          <span class="inv-card-lbl">Productos sin Anaquel</span>
+      <!-- Barra de Resumen y Filtro de Stock (T-50) -->
+      <div class="inv-summary-bar">
+        <div class="inv-summary-text" id="invSummaryText">Cargando inventario…</div>
+        <div class="inv-filter-pills" id="invStockFilterPills">
+          <button type="button" class="inv-pill active" data-stock-filter="ALL">Todos</button>
+          <button type="button" class="inv-pill" data-stock-filter="LOW">Bajo stock</button>
+          <button type="button" class="inv-pill" data-stock-filter="OUT">Agotados</button>
         </div>
       </div>
 
-      <!-- Barra de Filtros y Búsqueda -->
+      <!-- Barra de Filtros por Categoría y Búsqueda -->
       <div class="inventory-filter-bar">
         <div class="inventory-cat-tabs" id="invCategoryFilterTabs"></div>
         <div class="inv-search-wrap">
-          <input type="search" id="invSearchInput" placeholder="🔍 Buscar producto en inventario...">
+          <input type="search" id="invSearchInput" placeholder="🔍 Buscar producto en tienda...">
         </div>
       </div>
 
-      <!-- Tabla de Inventario -->
+      <!-- Tabla de Inventario Limpia y Clicable (T-50) -->
       <div class="card" style="margin-top:10px;">
         <div class="table-wrap">
-          <table class="inventory-table">
+          <table class="inventory-table-clean">
             <thead>
               <tr>
-                <th style="width:130px;">Categoría</th>
-                <th>Nombre del Producto</th>
-                <th style="width:120px;text-align:right;">Precio Venta</th>
-                <th style="width:110px;text-align:center;">Stock Bodega</th>
-                <th style="width:130px;text-align:center;">Stock Anaquel</th>
-                <th style="width:110px;text-align:center;">Stock Total</th>
-                <th style="width:190px;text-align:center;">Acciones</th>
+                <th style="text-align:left;">Producto</th>
+                <th style="width:120px;text-align:right;">Precio</th>
+                <th style="width:130px;text-align:center;">Anaquel</th>
+                <th style="width:130px;text-align:center;">Bodega</th>
               </tr>
             </thead>
             <tbody id="inventoryTableBody">
-              <tr><td colspan="7" class="message">Cargando inventario de productos…</td></tr>
+              <tr><td colspan="4" class="message">Cargando inventario de productos…</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- VISTA DE REPORTE DE RENTAS -->
+    <!-- VISTA DE CORTE Y REPORTE DE RENTAS (T-60) -->
     <section id="rentalsView" class="view" hidden>
       <div class="section-head">
         <div>
-          <h2>Reporte del Turno</h2>
-          <div id="rentalContext" class="muted">Habitaciones rentadas durante el turno abierto.</div>
+          <h2>Corte de Turno</h2>
+          <div id="rentalContext" class="muted">Resumen financiero y habitaciones rentadas durante el turno abierto.</div>
         </div>
-        <button id="refreshRentals" class="btn secondary">Actualizar reporte</button>
+        <button id="refreshRentals" class="btn secondary">Actualizar corte</button>
       </div>
-      <div id="rentalSummary" class="report-summary"></div>
+      <div id="corteSummaryGrid" class="corte-summary-grid"></div>
       <div id="rentalReport" class="card"><div class="message">Abre este reporte para consultar las rentas del turno.</div></div>
     </section>
 
@@ -1478,6 +1996,19 @@
     © 2026 FEMA. Todos los derechos reservados. · Versión 0.1.0 · Desarrollado por <strong>IntegraTech</strong>
   </footer>
 
+  <!-- COMPONENTE SHEET LATERAL UNIFICADO (T-23) -->
+  <dialog id="sheet" class="sheet" aria-labelledby="sheetTitle">
+    <div class="sheet-header">
+      <div class="sheet-title-zone">
+        <h3 id="sheetTitle">Panel</h3>
+        <p id="sheetSubtitle" hidden></p>
+      </div>
+      <button type="button" class="sheet-close-btn" id="sheetCloseBtn" aria-label="Cerrar panel">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+    <div class="sheet-footer" id="sheetFooter"></div>
+  </dialog>
+
   <!-- MODAL DE ESPERA OPERATIVA Y RETROALIMENTACIÓN RPC -->
   <dialog id="loadingModal" aria-labelledby="loadingTitle" aria-describedby="loadingMessage">
     <div class="loading-card">
@@ -1500,20 +2031,6 @@
     </div>
   </dialog>
 
-  <!-- DIÁLOGO EMERGENTE DE OPCIONES DE HABITACIÓN -->
-  <dialog id="roomActionsDialog" aria-labelledby="roomActionsTitle">
-    <div class="dialog-head">
-      <div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <h3 id="roomActionsTitle">Habitación</h3>
-          <span id="roomActionsStatusBadge" class="status"></span>
-        </div>
-        <div id="roomActionsSubtitle" class="muted" style="margin-top:2px;"></div>
-      </div>
-      <button class="close-room-actions close-btn" type="button" aria-label="Cerrar">×</button>
-    </div>
-    <div id="roomActionsContent" class="room-actions-content"></div>
-  </dialog>
 
   <!-- OTROS DIÁLOGOS Y FORMULARIOS DE CAPTURA -->
   <dialog id="editor">
@@ -2039,12 +2556,15 @@
         title: "Procesando solicitud...",
         message: "Por favor espere un momento mientras se completa la operación en Google Apps Script.",
         icon: "⚡",
-        color: "#2563eb"
+        color: "#0071E3"
       };
-      showLoading(feedback);
+      const timer = setTimeout(() => {
+        showLoading(feedback);
+      }, 600);
       try {
         return await rawCall(method, ...args);
       } finally {
+        clearTimeout(timer);
         hideLoading();
       }
     }
@@ -2052,14 +2572,91 @@
     const roomTypeName = (id) => state.catalogs?.roomTypes.find((x) => x.idTipo === id)?.nombre || id;
 
     let toastTimer = null;
-    function notify(message, isError = false) {
+    function notify(message, options = false) {
       const el = $("#toast");
       if (!el) return;
-      el.textContent = message;
+      const isError = typeof options === "boolean" ? options : Boolean(options?.error);
+      const undoFn = typeof options === "object" ? options?.undo : null;
+      const ms = typeof options === "object" && options?.ms ? options.ms : 5000;
+
       el.className = `toast${isError ? " error" : ""}`;
+      el.innerHTML = "";
+
+      const textSpan = document.createElement("span");
+      textSpan.textContent = message;
+      el.appendChild(textSpan);
+
+      if (undoFn && typeof undoFn === "function") {
+        const undoBtn = document.createElement("button");
+        undoBtn.type = "button";
+        undoBtn.textContent = "Deshacer";
+        undoBtn.className = "toast-undo-btn";
+        undoBtn.style.cssText = "margin-left: 12px; background: rgba(255,255,255,0.25); border: none; color: inherit; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer;";
+        undoBtn.onclick = (e) => {
+          e.stopPropagation();
+          el.hidden = true;
+          undoFn();
+        };
+        el.appendChild(undoBtn);
+      }
+
       el.hidden = false;
       if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => { el.hidden = true; }, 5000);
+      toastTimer = setTimeout(() => { el.hidden = true; }, ms);
+    }
+
+    function openSheet({ title, subtitle = "", body = "", primary = null, more = [] }) {
+      const sheet = $("#sheet");
+      if (!sheet) return;
+      $("#sheetTitle").textContent = title;
+      const subEl = $("#sheetSubtitle");
+      if (subtitle) {
+        subEl.textContent = subtitle;
+        subEl.hidden = false;
+      } else {
+        subEl.hidden = true;
+      }
+
+      const bodyEl = $("#sheetBody");
+      bodyEl.innerHTML = "";
+      if (typeof body === "string") {
+        bodyEl.innerHTML = body;
+      } else if (body instanceof HTMLElement) {
+        bodyEl.appendChild(body);
+      }
+
+      const footEl = $("#sheetFooter");
+      footEl.innerHTML = "";
+      if (primary) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "sheet-primary-btn";
+        btn.textContent = primary.label;
+        if (primary.tone === "danger") btn.style.background = "var(--danger)";
+        btn.onclick = primary.onClick;
+        footEl.appendChild(btn);
+      }
+      if (more && more.length > 0) {
+        const moreContainer = document.createElement("div");
+        moreContainer.style.cssText = "display:flex; flex-direction:column; gap:6px; margin-top:4px;";
+        more.forEach((m) => {
+          const mBtn = document.createElement("button");
+          mBtn.type = "button";
+          mBtn.className = "sheet-more-link";
+          mBtn.textContent = m.label;
+          if (m.danger) mBtn.style.color = "var(--danger)";
+          mBtn.onclick = m.onClick;
+          moreContainer.appendChild(mBtn);
+        });
+        footEl.appendChild(moreContainer);
+      }
+
+      sheet.showModal();
+    }
+
+    function closeSheet() {
+      const sheet = $("#sheet");
+      if (sheet && sheet.open) sheet.close();
     }
 
     function unwrap(response) {
@@ -2098,10 +2695,12 @@
 
     function showView(view) {
       if (!view) return;
+      state.view = view;
       $$(".nav-btn").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
       $$(".view").forEach((section) => section.hidden = section.id !== view);
       if (view === "rentalsView") loadRentalReport();
       if (view === "inventoryView") loadInventory();
+      if (view === "catalogs") loadCatalogs();
     }
 
     function renderCatalogError(error) {
@@ -2205,7 +2804,7 @@
       const secs = absSec % 60;
       const pad = (n) => String(n).padStart(2, "0");
       const timeStr = `${hours}:${pad(mins)}:${pad(secs)}`;
-      return isOverdue ? `⚠️ +${timeStr}` : `⏱️ ${timeStr}`;
+      return isOverdue ? `+${timeStr}` : timeStr;
     }
 
     function formatCleaningTimer(milliseconds) {
@@ -2214,7 +2813,7 @@
       const mins = Math.floor((absSec % 3600) / 60);
       const secs = absSec % 60;
       const pad = (n) => String(n).padStart(2, "0");
-      return hours ? `🧹 ${hours}:${pad(mins)}:${pad(secs)}` : `🧹 ${pad(mins)}:${pad(secs)}`;
+      return hours ? `${hours}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
     }
 
     function refreshRoomClocks() {
@@ -2324,104 +2923,613 @@
       refreshRoomClocks();
     }
 
-    function openRoomActions(idHabitacion) {
+    function openStaffSheet(idHabitacion) {
       const room = state.rooms?.find((item) => item.idHabitacion === idHabitacion);
       if (!room) return;
-      if (room.estado === "DISPONIBLE") {
-        return openEntry(idHabitacion);
-      }
-      const rates = ratesForRoom(room);
-      const availableStaff = state.cleaningStaff.filter((staff) => staff.disponible && staff.idMotel === room.idMotel);
-      const canExit = room.estado === "OCUPADA" && state.shift?.canOperate && room.idEstanciaActiva;
-      const canAssign = room.estado === "SUCIA" && state.shift?.canOperate && availableStaff.length > 0;
-      const canTransfer = canExit && state.rooms.some((candidate) => candidate.idHabitacion !== room.idHabitacion && candidate.idMotel === room.idMotel && candidate.estado === "DISPONIBLE");
+      const staffList = (state.cleaningStaff || []).filter((s) => s.idMotel === room.idMotel);
 
-      $("#roomActionsTitle").textContent = `Habitación ${room.numeroHabitacion}`;
-      $("#roomActionsSubtitle").textContent = `${room.tipoHabitacion} · ${hotelName(room.idMotel)}`;
+      const container = document.createElement("div");
+      container.className = "staff-picker-wrap";
 
-      const statusBadge = $("#roomActionsStatusBadge");
-      const statusLabel = room.estado === "LIMPIEZA" ? "Limpiando" : room.estado;
-      statusBadge.className = `status on`;
-      statusBadge.textContent = statusLabel;
-
-      let detailsHtml = "";
-      if (room.estado === "DISPONIBLE") {
-        detailsHtml = `
-          <div class="room-modal-details">
-            <div><strong>Tarifa disponible:</strong> ${rates.length ? `Desde $${Number(room.precioDesde).toLocaleString("es-MX")}` : "Sin tarifas configuradas"}</div>
-            <div class="muted">${rates.length} opciones de estancia en catálogo. Lista para registrar entrada.</div>
+      if (!staffList.length) {
+        container.innerHTML = `
+          <div class="message warning" style="margin-top:10px;">
+            No hay personal de limpieza registrado en catálogo para este motel.
           </div>
         `;
-      } else if (room.estado === "OCUPADA") {
-        detailsHtml = `
-          <div class="room-modal-details">
-            <div><strong>Importe cobrado:</strong> $${Number(room.precioFinal || 0).toLocaleString("es-MX")}</div>
-            ${room.fechaHoraEntrada ? `<div><strong>Hora de entrada:</strong> ${escapeHtml(formatDate(room.fechaHoraEntrada))}</div>` : ""}
-            ${room.fechaHoraSalidaPrevista ? `<div><strong>Salida prevista:</strong> ${escapeHtml(formatDate(room.fechaHoraSalidaPrevista))}</div>` : ""}
-            ${room.placas || room.marcaModeloVehiculo ? `<div><strong>Vehículo:</strong> ${escapeHtml(room.placas || "Sin placas")} ${room.marcaModeloVehiculo ? `· ${escapeHtml(room.marcaModeloVehiculo)}` : ""}</div>` : ""}
-            ${room.personasExtra ? `<div><strong>Personas extra:</strong> ${room.personasExtra}</div>` : ""}
-          </div>
-        `;
-      } else if (room.estado === "SUCIA") {
-        detailsHtml = `
-          <div class="room-modal-details">
-            <div><strong>Puntos de limpieza:</strong> ${room.puntosLimpieza} pts</div>
-            <div><strong>Camaristas disponibles en turno:</strong> ${availableStaff.length}</div>
-            ${!availableStaff.length ? '<div class="warning">No hay personal de limpieza disponible en este momento.</div>' : ""}
-          </div>
-        `;
-      } else if (room.estado === "LIMPIEZA") {
-        detailsHtml = `
-          <div class="room-modal-details">
-            <div><strong>Camarista asignada:</strong> ${escapeHtml(room.personalLimpieza || "En proceso")}</div>
-            ${room.fechaHoraInicioLimpieza ? `<div><strong>Hora de inicio:</strong> ${escapeHtml(formatDate(room.fechaHoraInicioLimpieza))}</div>` : ""}
+      } else {
+        container.innerHTML = `
+          <div class="sheet-section-title">Selecciona camarista para asignar e iniciar limpieza:</div>
+          <div class="staff-picker-list">
+            ${staffList.map((s) => `
+              <button type="button" class="staff-picker-btn ${s.disponible ? '' : 'busy'}" data-staff-id="${escapeHtml(s.idPersonal)}">
+                <div class="staff-picker-info">
+                  <span class="staff-picker-name">${escapeHtml(s.nombre)}</span>
+                  <span class="staff-picker-meta">${s.disponible ? 'Disponible' : 'En otra tarea'} · ${s.puntosAcumulados || 0} pts en turno</span>
+                </div>
+                <span class="staff-picker-arrow">Asignar ➔</span>
+              </button>
+            `).join("")}
           </div>
         `;
       }
 
-      let actionsHtml = "";
-      if (room.estado === "DISPONIBLE") {
-        actionsHtml = `
-          <div class="modal-actions-grid">
-            <button class="btn primary" data-action="entry" data-id="${escapeHtml(room.idHabitacion)}" ${canEnter ? "" : "disabled"}>🔑 Registrar entrada</button>
-          </div>
-        `;
-      } else if (room.estado === "OCUPADA") {
-        actionsHtml = `
-          <div class="modal-actions-grid">
-            <button class="btn primary" data-action="room-sale" data-id="${escapeHtml(room.idHabitacion)}" ${canExit ? "" : "disabled"}>🛒 Venta / Consumos a habitación</button>
-            <button class="btn exit-btn" data-action="exit" data-id="${escapeHtml(room.idHabitacion)}" ${canExit ? "" : "disabled"}>🚪 Registrar salida (Pasa a Sucia)</button>
-            <button class="btn secondary" data-action="extra-person" data-id="${escapeHtml(room.idHabitacion)}" ${canExit ? "" : "disabled"}>👤 Agregar persona extra</button>
-            <button class="btn secondary" data-action="edit-stay" data-id="${escapeHtml(room.idHabitacion)}" ${canExit ? "" : "disabled"}>✏️ Editar renta (hora/vehículo/precio)</button>
-            <button class="btn secondary" data-action="transfer" data-id="${escapeHtml(room.idHabitacion)}" ${canTransfer ? "" : "disabled"}>🔄 Cambio de habitación</button>
-            <button class="btn danger" data-action="cancel-stay" data-id="${escapeHtml(room.idHabitacion)}" ${canExit ? "" : "disabled"}>⛔ Cancelar renta</button>
-          </div>
-        `;
-      } else if (room.estado === "SUCIA") {
-        actionsHtml = `
-          <div class="modal-actions-grid">
-            <button class="btn cleaning-btn" data-action="cleaning" data-id="${escapeHtml(room.idHabitacion)}" ${canAssign ? "" : "disabled"}>🧹 Asignar camarista e iniciar limpieza</button>
-            <button class="btn secondary" data-action="undo-state" data-id="${escapeHtml(room.idHabitacion)}" ${state.shift?.canOperate ? "" : "disabled"}>↩️ Deshacer último cambio (Corrección)</button>
-          </div>
-        `;
-      } else if (room.estado === "LIMPIEZA") {
-        actionsHtml = `
-          <div class="modal-actions-grid">
-            <button class="btn primary" data-action="finish-cleaning" data-id="${escapeHtml(room.idHabitacion)}" ${state.shift?.canOperate ? "" : "disabled"}>✅ Finalizar limpieza (Pasa a Disponible)</button>
-            <button class="btn secondary" data-action="undo-state" data-id="${escapeHtml(room.idHabitacion)}" ${state.shift?.canOperate ? "" : "disabled"}>↩️ Deshacer último cambio (Corrección)</button>
-          </div>
-        `;
-      }
+      container.addEventListener("click", async (e) => {
+        const btn = e.target.closest(".staff-picker-btn");
+        if (!btn || btn.disabled) return;
+        const staffId = btn.dataset.staffId;
+        const staff = staffList.find((s) => s.idPersonal === staffId);
+        btn.disabled = true;
+        try {
+          await call("apiAssignCleaning", {
+            idHabitacion: room.idHabitacion,
+            idPersonal: staffId,
+            idempotencyKey: crypto.randomUUID()
+          });
+          closeSheet();
+          applyInitial(unwrap(await call("apiGetInitialState")));
+          notify(`Limpieza iniciada por ${staff?.nombre || "camarista"}.`, {
+            undo: async () => {
+              await call("apiUndoRoomState", { idHabitacion: room.idHabitacion, idempotencyKey: crypto.randomUUID() });
+              applyInitial(unwrap(await call("apiGetInitialState")));
+              notify(`Se revirtió la asignación de la hab. ${room.numeroHabitacion}.`);
+            }
+          });
+        } catch (err) {
+          notify(err.message || err, true);
+          btn.disabled = false;
+        }
+      });
 
-      $("#roomActionsContent").innerHTML = `
-        ${detailsHtml}
-        ${actionsHtml}
-        <div class="dialog-actions">
-          <button type="button" class="btn secondary cancel-room-actions">Cerrar</button>
+      openSheet({
+        title: `Habitación ${room.numeroHabitacion}`,
+        subtitle: `Sucia · ${room.puntosLimpieza} pts · ${room.tipoHabitacion}`,
+        body: container,
+        more: [
+          {
+            label: "Deshacer último cambio (Corrección)",
+            onClick: async () => {
+              if (!confirm("¿Revertir la habitación a su estado anterior?")) return;
+              try {
+                await call("apiUndoRoomState", { idHabitacion: room.idHabitacion, idempotencyKey: crypto.randomUUID() });
+                closeSheet();
+                applyInitial(unwrap(await call("apiGetInitialState")));
+                notify("Corrección aplicada.");
+              } catch (err) {
+                notify(err.message || err, true);
+              }
+            }
+          }
+        ]
+      });
+    }
+
+    function openFinishCleaningSheet(idHabitacion) {
+      const room = state.rooms?.find((item) => item.idHabitacion === idHabitacion);
+      if (!room) return;
+
+      const mins = room.fechaHoraInicioLimpieza
+        ? Math.max(0, Math.floor((Date.now() - new Date(room.fechaHoraInicioLimpieza).getTime()) / 60000))
+        : 0;
+
+      const container = document.createElement("div");
+      container.className = "clean-finish-wrap";
+      container.innerHTML = `
+        <div class="sheet-clean-summary">
+          <div class="clean-stat-box">
+            <span class="clean-stat-val">${mins} min</span>
+            <span class="clean-stat-lbl">Tiempo transcurrido</span>
+          </div>
+          <div class="clean-stat-box">
+            <span class="clean-stat-val">${room.puntosLimpieza} pts</span>
+            <span class="clean-stat-lbl">Puntos acumulados</span>
+          </div>
         </div>
+        <div class="clean-person-row">
+          <span class="clean-person-lbl">Camarista asignada:</span>
+          <span class="clean-person-val">${escapeHtml(room.personalLimpieza || "Personal")}</span>
+        </div>
+        <p class="muted" style="margin-top:14px;line-height:1.4;">
+          Al finalizar la limpieza, la habitación pasará de inmediato a <strong>DISPONIBLE</strong>.
+        </p>
       `;
 
-      $("#roomActionsDialog").showModal();
+      openSheet({
+        title: `Habitación ${room.numeroHabitacion}`,
+        subtitle: `En limpieza · ${escapeHtml(room.personalLimpieza || "Camarista")}`,
+        body: container,
+        primary: {
+          label: "Terminar limpieza (Pasa a Disponible)",
+          onClick: async () => {
+            try {
+              const res = unwrap(await call("apiCompleteCleaning", { idHabitacion: room.idHabitacion, idempotencyKey: crypto.randomUUID() }));
+              closeSheet();
+              applyInitial(unwrap(await call("apiGetInitialState")));
+              notify(`Habitación ${room.numeroHabitacion} disponible (${res.minutosLimpieza} min).`, {
+                undo: async () => {
+                  await call("apiUndoRoomState", { idHabitacion: room.idHabitacion, idempotencyKey: crypto.randomUUID() });
+                  applyInitial(unwrap(await call("apiGetInitialState")));
+                  notify(`Se regresó la hab. ${room.numeroHabitacion} a limpieza.`);
+                }
+              });
+            } catch (err) {
+              notify(err.message || err, true);
+            }
+          }
+        },
+        more: [
+          {
+            label: "Deshacer último cambio",
+            onClick: async () => {
+              if (!confirm("¿Revertir la habitación a su estado anterior?")) return;
+              try {
+                await call("apiUndoRoomState", { idHabitacion: room.idHabitacion, idempotencyKey: crypto.randomUUID() });
+                closeSheet();
+                applyInitial(unwrap(await call("apiGetInitialState")));
+                notify("Corrección aplicada.");
+              } catch (err) {
+                notify(err.message || err, true);
+              }
+            }
+          }
+        ]
+      });
+    }
+
+    async function openStayAccountSheet(idHabitacion) {
+      const room = state.rooms?.find((item) => item.idHabitacion === idHabitacion);
+      if (!room) return;
+
+      const loadingContainer = document.createElement("div");
+      loadingContainer.className = "message";
+      loadingContainer.textContent = "Consultando cuenta de la habitación…";
+
+      openSheet({
+        title: `Habitación ${room.numeroHabitacion}`,
+        subtitle: `Estancia activa · ${room.tipoHabitacion}`,
+        body: loadingContainer
+      });
+
+      try {
+        const account = unwrap(await call("apiGetStayAccount", room.idHabitacion));
+        renderStayAccountContent(room, account);
+      } catch (err) {
+        loadingContainer.className = "message error";
+        loadingContainer.textContent = err.message || err;
+      }
+    }
+
+    function renderStayAccountContent(room, account) {
+      const saldo = Number(account.saldo || 0);
+      const now = Date.now();
+      const exitTime = room.fechaHoraSalidaPrevista ? new Date(room.fechaHoraSalidaPrevista).getTime() : now;
+      const diffMs = exitTime - now;
+      const isLate = diffMs < 0;
+      const absDiff = Math.abs(diffMs);
+      const h = Math.floor(absDiff / 3600000);
+      const m = Math.floor((absDiff % 3600000) / 60000);
+      const timeStr = isLate ? `Vencida +${h > 0 ? h + 'h ' : ''}${m}m` : `Restante: ${h > 0 ? h + 'h ' : ''}${m}m`;
+
+      const container = document.createElement("div");
+      container.className = "stay-sheet-wrap";
+
+      let sheetCart = [];
+      let pickerExpanded = false;
+      let selectedCat = "TODAS";
+      let searchKeyword = "";
+
+      function updateView() {
+        container.innerHTML = `
+          <!-- Banner de tiempo y vehículo -->
+          <div class="stay-info-banner">
+            <span class="stay-time-left ${isLate ? 'late' : ''}">${timeStr}</span>
+            ${room.placas ? `<span class="stay-veh-badge">🚗 ${escapeHtml(room.placas)} ${escapeHtml(room.marcaModeloVehiculo || '')}</span>` : ''}
+          </div>
+
+          <!-- Saldo pendiente -->
+          <div class="stay-balance-card ${saldo > 0 ? 'has-debt' : 'paid'}">
+            <span class="balance-title">${saldo > 0 ? 'Saldo Pendiente' : 'Cuenta Liquidada'}</span>
+            <span class="balance-amount">$${saldo.toFixed(2)}</span>
+            <span class="balance-subtitle">${saldo > 0 ? 'Cobro requerido al liberar' : 'Sin pagos pendientes'}</span>
+          </div>
+
+          <!-- Encabezado de detalle de cuenta -->
+          <div class="stay-section-header">
+            <h4>Detalle de la Cuenta</h4>
+            <button type="button" class="btn secondary sm" id="stayTogglePickerBtn">
+              ${pickerExpanded ? '✕ Cerrar catálogo' : '＋ Agregar consumo'}
+            </button>
+          </div>
+
+          <!-- Zona de Catálogo Embebido (T-42) -->
+          <div id="stayPickerZone" class="sheet-picker-zone" ${pickerExpanded ? '' : 'hidden'}>
+            <div class="sheet-picker-chips" id="stayPickerChips">
+              ${MENU_CATEGORIES.map(c => `
+                <button type="button" class="sheet-picker-chip ${c === selectedCat ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>
+              `).join("")}
+            </div>
+            <input type="search" id="stayPickerSearch" placeholder="🔍 Buscar producto en tienda..." value="${escapeHtml(searchKeyword)}" style="font-size:12px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);">
+
+            <div class="sheet-picker-grid" id="stayPickerGrid">
+              ${renderStayProductsGrid()}
+            </div>
+
+            <!-- Mini Carrito en el Sheet -->
+            ${sheetCart.length ? `
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 10px;margin-top:6px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <strong style="font-size:12px;color:#1e40af;">${sheetCart.reduce((s, x) => s + x.cantidad, 0)} productos a cargar:</strong>
+                  <strong style="font-size:13px;color:#1e3a8a;">Total: $${sheetCart.reduce((s, x) => s + (x.cantidad * x.precioVenta), 0).toFixed(2)}</strong>
+                </div>
+                <div style="font-size:11px;color:#3b82f6;margin-top:2px;">
+                  ${sheetCart.map(x => `${escapeHtml(x.nombre)} (×${x.cantidad})`).join(", ")}
+                </div>
+                <button type="button" class="btn primary sm" id="stayConfirmConsumptionBtn" style="width:100%;margin-top:6px;">
+                  Cargar a la habitación · $${sheetCart.reduce((s, x) => s + (x.cantidad * x.precioVenta), 0).toFixed(2)}
+                </button>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Lista de Cargos Registrados -->
+          <div class="stay-items-list">
+            <div class="stay-item-row">
+              <div class="stay-item-desc">
+                <strong>Renta de habitación (${account.renta.horas} hrs)</strong>
+                <span class="muted-sm">${account.renta.estadoPago === 'PAGADO' ? '✓ Pagado en recepción' : 'Pendiente'}</span>
+              </div>
+              <span class="stay-item-val">$${Number(account.renta.total).toFixed(2)}</span>
+            </div>
+
+            ${account.personasExtra && account.personasExtra.cantidad > 0 ? `
+              <div class="stay-item-row">
+                <div class="stay-item-desc">
+                  <strong>${account.personasExtra.cantidad} Persona(s) extra</strong>
+                  <span class="muted-sm">${account.personasExtra.estadoPago}</span>
+                </div>
+                <span class="stay-item-val">$${Number(account.personasExtra.total).toFixed(2)}</span>
+              </div>
+            ` : ''}
+
+            ${account.consumos && account.consumos.length ? account.consumos.map((c) => `
+              <div class="stay-item-row">
+                <div class="stay-item-desc">
+                  <strong>${escapeHtml(c.descripcion)} (×${c.cantidad})</strong>
+                  <span class="muted-sm">${c.estado === 'COBRADO' ? '✓ Liquidado' : 'Pendiente de cobro'}</span>
+                </div>
+                <span class="stay-item-val">$${Number(c.total).toFixed(2)}</span>
+              </div>
+            `).join("") : '<div class="stay-no-consumptions muted">Sin consumos de tienda registrados todavía.</div>'}
+          </div>
+        `;
+
+        const toggleBtn = container.querySelector("#stayTogglePickerBtn");
+        if (toggleBtn) {
+          toggleBtn.onclick = () => {
+            pickerExpanded = !pickerExpanded;
+            if (pickerExpanded && !state.inventoryLoaded) loadInventory(false);
+            updateView();
+          };
+        }
+
+        const chipsWrap = container.querySelector("#stayPickerChips");
+        if (chipsWrap) {
+          chipsWrap.onclick = (e) => {
+            const chip = e.target.closest(".sheet-picker-chip");
+            if (!chip) return;
+            selectedCat = chip.dataset.cat;
+            updateView();
+          };
+        }
+
+        const searchInp = container.querySelector("#stayPickerSearch");
+        if (searchInp) {
+          searchInp.oninput = (e) => {
+            searchKeyword = e.target.value.toLowerCase().trim();
+            const grid = container.querySelector("#stayPickerGrid");
+            if (grid) grid.innerHTML = renderStayProductsGrid();
+          };
+        }
+
+        const gridEl = container.querySelector("#stayPickerGrid");
+        if (gridEl) {
+          gridEl.onclick = (e) => {
+            const itemBtn = e.target.closest(".sheet-picker-item");
+            if (!itemBtn || itemBtn.disabled) return;
+            const pId = itemBtn.dataset.prodId;
+            const prod = (state.inventoryProducts || []).find(p => p.idProducto === pId);
+            if (!prod) return;
+            const existing = sheetCart.find(x => x.idProducto === pId);
+            if (existing) {
+              if (existing.cantidad < prod.stockAnaquel) existing.cantidad++;
+              else notify(`Sólo hay ${prod.stockAnaquel} pzas disponibles en Anaquel.`, true);
+            } else {
+              sheetCart.push({ idProducto: prod.idProducto, nombre: prod.nombre, precioVenta: prod.precioVenta, cantidad: 1 });
+            }
+            updateView();
+          };
+        }
+
+        const confirmBtn = container.querySelector("#stayConfirmConsumptionBtn");
+        if (confirmBtn) {
+          confirmBtn.onclick = async () => {
+            if (!sheetCart.length) return;
+            confirmBtn.disabled = true;
+            try {
+              await call("apiRegisterSaleToRoom", {
+                idHabitacion: room.idHabitacion,
+                tipoPago: "CARGO_HABITACION",
+                formaPago: "CARGO_HABITACION",
+                productos: sheetCart.map(x => ({ idProducto: x.idProducto, cantidad: x.cantidad })),
+                idempotencyKey: crypto.randomUUID()
+              });
+              notify(`Venta cargada exitosamente a la habitación ${room.numeroHabitacion}.`);
+              sheetCart = [];
+              pickerExpanded = false;
+              const freshAcc = unwrap(await call("apiGetStayAccount", room.idHabitacion));
+              renderStayAccountContent(room, freshAcc);
+            } catch (err) {
+              notify(err.message || err, true);
+              confirmBtn.disabled = false;
+            }
+          };
+        }
+      }
+
+      function renderStayProductsGrid() {
+        const prods = state.inventoryProducts || [];
+        const filtered = prods.filter(p => {
+          if (selectedCat !== "TODAS" && p.categoria !== selectedCat) return false;
+          if (searchKeyword && !p.nombre.toLowerCase().includes(searchKeyword)) return false;
+          return true;
+        });
+        if (!filtered.length) return '<div class="muted-sm" style="grid-column:1/-1;padding:8px;text-align:center;">No hay productos disponibles.</div>';
+        return filtered.map(p => `
+          <button type="button" class="sheet-picker-item" data-prod-id="${escapeHtml(p.idProducto)}" ${p.stockAnaquel <= 0 ? 'disabled' : ''}>
+            <span class="sheet-picker-item-name">${escapeHtml(p.nombre)}</span>
+            <span class="sheet-picker-item-price">$${Number(p.precioVenta || 0).toFixed(2)}</span>
+            <span class="sheet-picker-item-stock">${p.stockAnaquel > 0 ? `${p.stockAnaquel} en anaquel` : 'Agotado'}</span>
+          </button>
+        `).join("");
+      }
+
+      updateView();
+
+      openSheet({
+        title: `Habitación ${room.numeroHabitacion}`,
+        subtitle: `Estancia activa · ${room.tipoHabitacion} · Salida: ${formatTimeOnly(room.fechaHoraSalidaPrevista)}`,
+        body: container,
+        primary: {
+          label: saldo > 0 ? `Cobrar $${saldo.toFixed(2)} y Liberar` : "Liberar habitación (Pasa a Sucia)",
+          tone: "default",
+          onClick: () => {
+            closeSheet();
+            openExit(room.idHabitacion);
+          }
+        },
+        more: [
+          {
+            label: "👤 Agregar persona extra",
+            onClick: () => {
+              closeSheet();
+              openExtraPerson(room.idHabitacion);
+            }
+          },
+          {
+            label: "✏️ Editar renta (hora/vehículo/precio)",
+            onClick: () => {
+              closeSheet();
+              openEditStay(room.idHabitacion);
+            }
+          },
+          {
+            label: "🔄 Cambio de habitación",
+            onClick: () => {
+              closeSheet();
+              openTransfer(room.idHabitacion);
+            }
+          },
+          {
+            label: "⛔ Cancelar renta",
+            danger: true,
+            onClick: () => {
+              closeSheet();
+              openCancelStay(room.idHabitacion);
+            }
+          }
+        ]
+      });
+    }
+
+    function openProductSheet(idProducto) {
+      const prod = (state.inventoryProducts || []).find((p) => p.idProducto === idProducto);
+      if (!prod) return;
+
+      const isLow = prod.stockAnaquel <= (prod.stockMinimo || 3);
+      const isOut = prod.stockAnaquel <= 0;
+
+      const content = document.createElement("div");
+      content.className = "prod-sheet-container";
+      content.innerHTML = `
+        <div class="sheet-stock-grid">
+          <div class="sheet-stock-box ${isOut ? 'out' : (isLow ? 'low' : '')}">
+            <span class="sheet-stock-val">${prod.stockAnaquel} pzas</span>
+            <span class="sheet-stock-lbl">En Anaquel (Venta)</span>
+            ${isOut ? '<span class="sheet-badge-out">Agotado</span>' : (isLow ? '<span class="sheet-badge-low">Bajo stock</span>' : '')}
+          </div>
+          <div class="sheet-stock-box">
+            <span class="sheet-stock-val">${prod.stockBodega} pzas</span>
+            <span class="sheet-stock-lbl">En Bodega (Almacén)</span>
+          </div>
+        </div>
+
+        <!-- Surtir Anaquel (Traspaso rápido) -->
+        <div class="sheet-section-box">
+          <div class="sheet-section-title">Surtir Anaquel desde Bodega</div>
+          <div class="sheet-stepper-row">
+            <label style="font-size:12px;font-weight:600;">Cantidad:</label>
+            <div class="stepper-wrap">
+              <button type="button" class="stepper-btn" id="sheetTransferDec">-</button>
+              <input type="number" id="sheetTransferQty" min="1" max="${prod.stockBodega || 1}" value="1" readonly>
+              <button type="button" class="stepper-btn" id="sheetTransferInc" ${prod.stockBodega <= 1 ? 'disabled' : ''}>+</button>
+            </div>
+            <button type="button" class="btn primary sm" id="sheetTransferConfirmBtn" ${prod.stockBodega <= 0 ? 'disabled' : ''}>
+              Transferir a Anaquel
+            </button>
+          </div>
+          ${prod.stockBodega <= 0 ? '<div class="muted-sm" style="margin-top:4px;">No hay existencias en bodega para transferir.</div>' : ''}
+        </div>
+
+        <!-- Edición de Datos -->
+        <div class="sheet-section-box">
+          <div class="sheet-section-title">Datos del Catálogo</div>
+          <div class="field" style="margin-top:6px;">
+            <label>Nombre del producto</label>
+            <input type="text" id="sheetProdName" value="${escapeHtml(prod.nombre)}">
+          </div>
+          <div class="field">
+            <label>Precio de venta ($ MXN)</label>
+            <input type="number" id="sheetProdPrice" step="0.5" min="0" value="${prod.precioVenta}">
+          </div>
+          <button type="button" class="btn secondary sm" id="sheetSaveProdBtn">Guardar cambios</button>
+        </div>
+
+        <!-- Corrección Física -->
+        <details class="sheet-details">
+          <summary class="sheet-details-summary">Ajuste físico de inventario (Merma / Conteo)</summary>
+          <div class="field" style="margin-top:10px;">
+            <label>Ubicación:</label>
+            <select id="sheetAdjustUbicacion">
+              <option value="ANAQUEL">Anaquel (Actual: ${prod.stockAnaquel})</option>
+              <option value="BODEGA">Bodega (Actual: ${prod.stockBodega})</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Nuevo conteo físico:</label>
+            <input type="number" id="sheetAdjustQty" min="0" value="${prod.stockAnaquel}">
+          </div>
+          <div class="field">
+            <label>Motivo obligatorio:</label>
+            <input type="text" id="sheetAdjustMotivo" placeholder="Ej. Conteo físico de turno">
+          </div>
+          <button type="button" class="btn danger sm" id="sheetAdjustConfirmBtn">Aplicar ajuste</button>
+        </details>
+      `;
+
+      openSheet({
+        title: prod.nombre,
+        subtitle: `${prod.categoria} · Stock total: ${prod.stockTotal} pzas`,
+        body: content,
+        more: [
+          {
+            label: "Ver historial de movimientos",
+            onClick: () => {
+              closeSheet();
+              openMovementsModal(prod.idProducto);
+            }
+          }
+        ]
+      });
+
+      const decBtn = content.querySelector("#sheetTransferDec");
+      const incBtn = content.querySelector("#sheetTransferInc");
+      const qtyInput = content.querySelector("#sheetTransferQty");
+      const transBtn = content.querySelector("#sheetTransferConfirmBtn");
+
+      if (decBtn && incBtn && qtyInput) {
+        decBtn.onclick = () => {
+          const val = Math.max(1, (Number(qtyInput.value) || 1) - 1);
+          qtyInput.value = val;
+          decBtn.disabled = val <= 1;
+          incBtn.disabled = val >= prod.stockBodega;
+        };
+        incBtn.onclick = () => {
+          const val = Math.min(prod.stockBodega, (Number(qtyInput.value) || 1) + 1);
+          qtyInput.value = val;
+          decBtn.disabled = val <= 1;
+          incBtn.disabled = val >= prod.stockBodega;
+        };
+      }
+
+      if (transBtn) {
+        transBtn.onclick = async () => {
+          const cantidad = Number(qtyInput.value) || 1;
+          transBtn.disabled = true;
+          try {
+            await call("apiTransferInventory", {
+              idProducto: prod.idProducto,
+              origen: "BODEGA",
+              destino: "ANAQUEL",
+              cantidad,
+              idempotencyKey: crypto.randomUUID()
+            });
+            notify(`Se transfirieron ${cantidad} pzas a Anaquel.`);
+            closeSheet();
+            loadInventory(true);
+          } catch (err) {
+            notify(err.message || err, true);
+            transBtn.disabled = false;
+          }
+        };
+      }
+
+      const saveProdBtn = content.querySelector("#sheetSaveProdBtn");
+      if (saveProdBtn) {
+        saveProdBtn.onclick = async () => {
+          const nombre = content.querySelector("#sheetProdName").value.trim();
+          const precioVenta = Number(content.querySelector("#sheetProdPrice").value) || 0;
+          if (!nombre) {
+            notify("El nombre no puede estar vacío.", true);
+            return;
+          }
+          saveProdBtn.disabled = true;
+          try {
+            await call("apiSaveProduct", {
+              idProducto: prod.idProducto,
+              categoria: prod.categoria,
+              nombre,
+              precioVenta,
+              activo: true,
+              idempotencyKey: crypto.randomUUID()
+            });
+            notify("Producto actualizado exitosamente.");
+            closeSheet();
+            loadInventory(true);
+          } catch (err) {
+            notify(err.message || err, true);
+            saveProdBtn.disabled = false;
+          }
+        };
+      }
+
+      const adjBtn = content.querySelector("#sheetAdjustConfirmBtn");
+      if (adjBtn) {
+        adjBtn.onclick = async () => {
+          const ubicacion = content.querySelector("#sheetAdjustUbicacion").value;
+          const nuevaCantidad = Number(content.querySelector("#sheetAdjustQty").value);
+          const motivo = content.querySelector("#sheetAdjustMotivo").value.trim();
+          if (!motivo) {
+            notify("El motivo del ajuste es obligatorio.", true);
+            return;
+          }
+          adjBtn.disabled = true;
+          try {
+            await call("apiAdjustInventory", {
+              idProducto: prod.idProducto,
+              ubicacion,
+              nuevaCantidad,
+              motivo,
+              idempotencyKey: crypto.randomUUID()
+            });
+            notify("Ajuste de inventario aplicado.");
+            closeSheet();
+            loadInventory(true);
+          } catch (err) {
+            notify(err.message || err, true);
+            adjBtn.disabled = false;
+          }
+        };
+      }
     }
 
     const formatDate = (value) => value ? new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "";
@@ -2453,24 +3561,45 @@
 
     function renderRentalReport() {
       const active = state.shift?.activeShift;
+      const summaryGrid = $("#corteSummaryGrid");
       if (!active) {
         $("#rentalContext").textContent = "No hay un turno abierto.";
-        $("#rentalSummary").innerHTML = "";
+        if (summaryGrid) summaryGrid.innerHTML = "";
         $("#rentalReport").innerHTML = '<div class="empty">Abre un turno para consultar su reporte de rentas.</div>';
         return;
       }
-      const items = state.rentals;
+      const items = state.rentals || [];
       const total = items.reduce((sum, item) => sum + Number(item.precioFinal || 0), 0);
+      const totalEfectivo = items.filter((x) => x.formaPago === "EFECTIVO").reduce((sum, item) => sum + Number(item.precioFinal || 0), 0);
+      const totalTarjeta = items.filter((x) => x.formaPago === "TARJETA").reduce((sum, item) => sum + Number(item.precioFinal || 0), 0);
       const occupiedCount = items.filter((x) => x.estadoDesocupacion === "OCUPADA").length;
       const finishedCount = items.length - occupiedCount;
 
       $("#rentalContext").textContent = `Turno activo de ${active.empleadoApertura} · Abierto desde ${formatDate(active.fechaHoraApertura)}`;
-      $("#rentalSummary").innerHTML = `
-        <div class="summary-card"><span class="label">Rentas Totales</span><span class="val">${items.length}</span></div>
-        <div class="summary-card"><span class="label">Total Ingresos</span><span class="val">$${total.toLocaleString("es-MX")}</span></div>
-        <div class="summary-card"><span class="label">Activas</span><span class="val">${occupiedCount}</span></div>
-        <div class="summary-card"><span class="label">Desocupadas</span><span class="val">${finishedCount}</span></div>
-      `;
+      if (summaryGrid) {
+        summaryGrid.innerHTML = `
+          <div class="corte-card">
+            <span class="corte-card-title">Total Recaudado</span>
+            <span class="corte-card-val">$${total.toLocaleString("es-MX")}</span>
+            <span class="corte-card-sub">${items.length} rentas en el turno</span>
+          </div>
+          <div class="corte-card">
+            <span class="corte-card-title">En Efectivo</span>
+            <span class="corte-card-val" style="color:#16a34a;">$${totalEfectivo.toLocaleString("es-MX")}</span>
+            <span class="corte-card-sub">Caja física de turno</span>
+          </div>
+          <div class="corte-card">
+            <span class="corte-card-title">Con Tarjeta / Terminal</span>
+            <span class="corte-card-val" style="color:#2563eb;">$${totalTarjeta.toLocaleString("es-MX")}</span>
+            <span class="corte-card-sub">Cobros bancarios</span>
+          </div>
+          <div class="corte-card">
+            <span class="corte-card-title">Habitaciones</span>
+            <span class="corte-card-val">${occupiedCount} / ${finishedCount}</span>
+            <span class="corte-card-sub">${occupiedCount} activas · ${finishedCount} desocupadas</span>
+          </div>
+        `;
+      }
 
       const rows = items.map((item) => `
         <tr>
@@ -2706,23 +3835,57 @@
       $("#entryEditor").showModal();
     }
 
-    function openExit(idHabitacion) {
+    async function openExit(idHabitacion) {
       const room = state.rooms.find((item) => item.idHabitacion === idHabitacion);
       if (!room || room.estado !== "OCUPADA" || !room.idEstanciaActiva || !state.shift?.canOperate) {
         notify("La habitación no está disponible para registrar salida.", true);
         return;
       }
+
+      let account = null;
+      try {
+        account = unwrap(await call("apiGetStayAccount", idHabitacion));
+      } catch (e) {
+        console.warn("Could not load stay account:", e);
+      }
+
+      const saldo = account ? (Number(account.saldo) || 0) : 0;
       $("#exitTitle").textContent = `Salida · Habitación ${room.numeroHabitacion}`;
       $("#exitForm").innerHTML = `
         <input type="hidden" name="idHabitacion" value="${escapeHtml(room.idHabitacion)}">
         <input type="hidden" name="idempotencyKey" value="${escapeHtml(entryIdempotencyKey())}">
+        <input type="hidden" name="saldoMonto" value="${saldo}">
+
+        ${saldo > 0 ? `
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:600; color:#991b1b;">Saldo pendiente por liquidar:</span>
+              <span style="font-size:18px; font-weight:800; color:#b91c1c;">$${saldo.toFixed(2)}</span>
+            </div>
+            <div style="font-size:12px; color:#7f1d1d; margin-top:4px;">
+              Consumos o cargos a cuenta de la estancia pendientes de cobro.
+            </div>
+            <div class="field" style="margin-top:10px;">
+              <label style="font-size:12px; font-weight:600;">Forma de pago de liquidación:</label>
+              <select name="cobroFormaPago" style="width:100%; padding:6px 10px; border-radius:6px; border:1px solid #d1d5db;">
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA">Tarjeta</option>
+              </select>
+            </div>
+          </div>
+        ` : `
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size:13px; color:#15803d; font-weight:600;">
+            ✓ Cuenta al corriente (Sin saldo pendiente)
+          </div>
+        `}
+
         <div class="field full">
           <label for="exitObservations">Observaciones <span class="muted">(opcional)</span></label>
           <input id="exitObservations" name="observaciones" maxlength="300" placeholder="Ej. Habitación desocupada en orden">
         </div>
         <div class="dialog-actions">
           <button type="button" class="btn secondary cancel-exit">Cancelar</button>
-          <button type="submit" class="btn exit-btn">Confirmar salida (pasa a SUCIA)</button>
+          <button type="submit" class="btn exit-btn">${saldo > 0 ? `Cobrar $${saldo.toFixed(2)} y registrar salida` : "Confirmar salida (pasa a SUCIA)"}</button>
         </div>
       `;
       $("#exitEditor").showModal();
@@ -3085,15 +4248,28 @@
       }
     });
 
-    // Click en la habitación: Si está DISPONIBLE pasa directo a registrar entrada, si no abre modal de opciones
+    // Direct routing to state-specific sheets (T-41, T-43, T-44, T-45)
+    function handleRoomClick(idHabitacion) {
+      const found = state.rooms?.find((item) => item.idHabitacion === idHabitacion);
+      if (!found) return;
+      if (found.estado === "DISPONIBLE") {
+        return openEntry(found.idHabitacion);
+      }
+      if (found.estado === "SUCIA") {
+        return openStaffSheet(found.idHabitacion);
+      }
+      if (found.estado === "LIMPIEZA") {
+        return openFinishCleaningSheet(found.idHabitacion);
+      }
+      if (found.estado === "OCUPADA") {
+        return openStayAccountSheet(found.idHabitacion);
+      }
+    }
+
     $("#rooms").addEventListener("click", (event) => {
       const room = event.target.closest(".room");
       if (room && room.dataset.roomId) {
-        const found = state.rooms?.find((item) => item.idHabitacion === room.dataset.roomId);
-        if (found && found.estado === "DISPONIBLE") {
-          return openEntry(found.idHabitacion);
-        }
-        openRoomActions(room.dataset.roomId);
+        handleRoomClick(room.dataset.roomId);
       }
     });
 
@@ -3102,54 +4278,7 @@
         const room = event.target.closest(".room");
         if (room && room.dataset.roomId) {
           event.preventDefault();
-          const found = state.rooms?.find((item) => item.idHabitacion === room.dataset.roomId);
-          if (found && found.estado === "DISPONIBLE") {
-            return openEntry(found.idHabitacion);
-          }
-          openRoomActions(room.dataset.roomId);
-        }
-      }
-    });
-
-    // Delegación de acciones desde la ventana emergente de opciones de la habitación
-    $("#roomActionsContent").addEventListener("click", async (event) => {
-      const btn = event.target.closest("[data-action]");
-      if (!btn || btn.disabled) return;
-      const action = btn.dataset.action;
-      const id = btn.dataset.id;
-      $("#roomActionsDialog").close();
-
-      if (action === "entry") return openEntry(id);
-      if (action === "room-sale") return openSaleModal(id);
-      if (action === "exit") return openExit(id);
-      if (action === "extra-person") return openExtraPerson(id);
-      if (action === "edit-stay") return openEditStay(id);
-      if (action === "transfer") return openTransfer(id);
-      if (action === "cancel-stay") return openCancelStay(id);
-      if (action === "cleaning") return openCleaning(id);
-
-      if (action === "undo-state") {
-        if (!confirm("Se revertirá la habitación a su estado anterior y se registrará como corrección auditable. ¿Continuar?")) return;
-        try {
-          const result = unwrap(await call("apiUndoRoomState", { idHabitacion: id, idempotencyKey: entryIdempotencyKey() }));
-          state.rentalsLoaded = false;
-          applyInitial(unwrap(await call("apiGetInitialState")));
-          notify(`Corrección registrada. La habitación regresó a ${result.estadoHabitacion}.`);
-        } catch (error) {
-          notify(error.message || error, true);
-        }
-        return;
-      }
-
-      if (action === "finish-cleaning") {
-        if (!confirm("La habitación pasará a DISPONIBLE para rentarse. ¿Finalizar limpieza?")) return;
-        try {
-          const result = unwrap(await call("apiCompleteCleaning", { idHabitacion: id, idempotencyKey: entryIdempotencyKey() }));
-          state.rentalsLoaded = false;
-          applyInitial(unwrap(await call("apiGetInitialState")));
-          notify(`Limpieza finalizada en ${result.minutosLimpieza} min. Habitación disponible.`);
-        } catch (error) {
-          notify(error.message || error, true);
+          handleRoomClick(room.dataset.roomId);
         }
       }
     });
@@ -3195,7 +4324,19 @@
       const button = form.querySelector('[type="submit"]');
       button.disabled = true;
       try {
-        unwrap(await call("apiRegisterExit", Object.fromEntries(new FormData(form))));
+        const formData = new FormData(form);
+        const idHabitacion = formData.get("idHabitacion");
+        const idempotencyKey = formData.get("idempotencyKey");
+        const observaciones = formData.get("observaciones");
+        const saldoMonto = Number(formData.get("saldoMonto")) || 0;
+        const payload = { idHabitacion, idempotencyKey, observaciones };
+        if (saldoMonto > 0) {
+          payload.cobro = {
+            formaPago: formData.get("cobroFormaPago") || "EFECTIVO",
+            monto: saldoMonto
+          };
+        }
+        unwrap(await call("apiRegisterExit", payload));
         $("#exitEditor").close();
         state.rentalsLoaded = false;
         applyInitial(unwrap(await call("apiGetInitialState")));
@@ -3313,9 +4454,35 @@
     $("#refreshRentals").addEventListener("click", () => loadRentalReport(true));
     $("#addButton").addEventListener("click", () => openEditor(state.catalog));
 
-    $(".close-room-actions").addEventListener("click", () => $("#roomActionsDialog").close());
-    $("#roomActionsContent").addEventListener("click", (e) => {
-      if (e.target.classList.contains("cancel-room-actions")) $("#roomActionsDialog").close();
+    // Menú de ajustes ⚙ (T-31)
+    $("#settingsMenuBtn")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const menu = $("#settingsMenu");
+      if (menu) menu.hidden = !menu.hidden;
+    });
+    document.addEventListener("click", (e) => {
+      const menu = $("#settingsMenu");
+      if (menu && !menu.hidden && !e.target.closest(".settings-wrap")) {
+        menu.hidden = true;
+      }
+    });
+    $("#menuCatalogsBtn")?.addEventListener("click", () => {
+      const menu = $("#settingsMenu");
+      if (menu) menu.hidden = true;
+      showView("catalogs");
+      loadCatalogs();
+    });
+    $("#menuRepairInvBtn")?.addEventListener("click", async () => {
+      const menu = $("#settingsMenu");
+      if (menu) menu.hidden = true;
+      if (!confirm("¿Deseas ejecutar la verificación y reparación del catálogo de inventario?")) return;
+      try {
+        const res = unwrap(await call("apiAdminRepairInventory"));
+        notify(res.message || "Inventario verificado.");
+        loadInventory(true);
+      } catch (err) {
+        notify(err.message || err, true);
+      }
     });
 
     $(".close").addEventListener("click", () => $("#editor").close());
@@ -3367,26 +4534,20 @@
         state.inventoryLoaded = true;
         renderInventory();
       } catch (err) {
-        $("#inventoryTableBody").innerHTML = `<tr><td colspan="7" class="message error">${escapeHtml(err.message || err)}</td></tr>`;
+        $("#inventoryTableBody").innerHTML = `<tr><td colspan="4" class="message error">${escapeHtml(err.message || err)}</td></tr>`;
       }
     }
 
     function renderInventory() {
       const prods = state.inventoryProducts || [];
       const totalProds = prods.length;
-      const totalBodega = prods.reduce((sum, p) => sum + (Number(p.stockBodega) || 0), 0);
-      const totalAnaquel = prods.reduce((sum, p) => sum + (Number(p.stockAnaquel) || 0), 0);
+      const lowStock = prods.filter((p) => Number(p.stockAnaquel) > 0 && Number(p.stockAnaquel) <= (p.stockMinimo || 3)).length;
       const zeroAnaquel = prods.filter((p) => (Number(p.stockAnaquel) || 0) <= 0).length;
 
-      const metricProdsEl = $("#invMetricTotalProds");
-      const metricBodegaEl = $("#invMetricTotalBodega");
-      const metricAnaquelEl = $("#invMetricTotalAnaquel");
-      const metricZeroEl = $("#invMetricZeroAnaquel");
-
-      if (metricProdsEl) metricProdsEl.textContent = totalProds;
-      if (metricBodegaEl) metricBodegaEl.textContent = totalBodega;
-      if (metricAnaquelEl) metricAnaquelEl.textContent = totalAnaquel;
-      if (metricZeroEl) metricZeroEl.textContent = zeroAnaquel;
+      const summaryEl = $("#invSummaryText");
+      if (summaryEl) {
+        summaryEl.innerHTML = `<strong>${totalProds}</strong> productos en menú · <span style="color:#b45309;"><strong>${lowStock}</strong> bajo stock</span> · <span style="color:#b91c1c;"><strong>${zeroAnaquel}</strong> agotados</span>`;
+      }
 
       // Pestañas de categorías
       const tabsEl = $("#invCategoryFilterTabs");
@@ -3396,11 +4557,15 @@
         `).join("");
       }
 
-      // Filtrado
-      const filterCat = state.inventoryCategoryFilter;
+      // Filtrado por categoría, stock y búsqueda
+      const filterCat = state.inventoryCategoryFilter || "TODAS";
+      const filterStock = state.inventoryStockFilter || "ALL";
       const search = (state.inventorySearch || "").trim().toLowerCase();
+
       const filtered = prods.filter((p) => {
         if (filterCat !== "TODAS" && p.categoria !== filterCat) return false;
+        if (filterStock === "LOW" && !(Number(p.stockAnaquel) > 0 && Number(p.stockAnaquel) <= (p.stockMinimo || 3))) return false;
+        if (filterStock === "OUT" && Number(p.stockAnaquel) > 0) return false;
         if (search && !p.nombre.toLowerCase().includes(search) && !p.categoria.toLowerCase().includes(search)) return false;
         return true;
       });
@@ -3409,31 +4574,33 @@
       if (!tbody) return;
 
       if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="message">No se encontraron productos con los filtros seleccionados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="message">No se encontraron productos con los filtros seleccionados.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = filtered.map((p) => `
-        <tr>
-          <td><span class="inv-cat-badge">${escapeHtml(p.categoria)}</span></td>
-          <td style="font-weight:700;color:#1e293b;">${escapeHtml(p.nombre)}</td>
-          <td style="text-align:right;font-weight:800;color:#15803d;font-variant-numeric:tabular-nums;">$${Number(p.precioVenta || 0).toFixed(2)}</td>
-          <td style="text-align:center;font-weight:700;color:#2563eb;">${p.stockBodega} pzas</td>
-          <td style="text-align:center;">
-            <span class="stock-badge ${p.stockAnaquel > 0 ? "stock-anaquel" : "stock-zero"}">
-              ${p.stockAnaquel > 0 ? `${p.stockAnaquel} pzas` : "Agotado (0)"}
-            </span>
-          </td>
-          <td style="text-align:center;font-weight:700;color:#475569;">${p.stockTotal} pzas</td>
-          <td style="text-align:center;">
-            <div style="display:inline-flex;gap:4px;">
-              <button type="button" class="btn secondary" style="padding:3px 7px;font-size:11px;" data-inv-edit="${escapeHtml(p.idProducto)}">✏️ Editar</button>
-              <button type="button" class="btn secondary" style="padding:3px 7px;font-size:11px;" data-inv-transfer="${escapeHtml(p.idProducto)}">🔄 Traspasar</button>
-              <button type="button" class="btn secondary" style="padding:3px 7px;font-size:11px;" data-inv-adjust="${escapeHtml(p.idProducto)}">⚖️ Corregir</button>
-            </div>
-          </td>
-        </tr>
-      `).join("");
+      tbody.innerHTML = filtered.map((p) => {
+        const isOut = (Number(p.stockAnaquel) || 0) <= 0;
+        const isLow = !isOut && Number(p.stockAnaquel) <= (p.stockMinimo || 3);
+        return `
+          <tr class="inv-row-clickable" data-product-id="${escapeHtml(p.idProducto)}" tabindex="0" role="button" aria-label="Gestionar ${escapeHtml(p.nombre)}">
+            <td>
+              <div class="inv-prod-title">${escapeHtml(p.nombre)}</div>
+              <div class="inv-prod-cat">${escapeHtml(p.categoria)}</div>
+            </td>
+            <td style="text-align:right;">
+              <span class="inv-prod-price">$${Number(p.precioVenta || 0).toFixed(2)}</span>
+            </td>
+            <td style="text-align:center;">
+              <span class="inv-badge-anaquel ${isOut ? 'out' : (isLow ? 'low' : '')}">
+                ${isOut ? 'Agotado (0)' : `${p.stockAnaquel} pzas`}
+              </span>
+            </td>
+            <td style="text-align:center;">
+              <span class="inv-badge-bodega">${p.stockBodega} pzas</span>
+            </td>
+          </tr>
+        `;
+      }).join("");
     }
 
     // Modal de Venta a Habitación
@@ -3644,7 +4811,7 @@
         items: state.saleCart.map((i) => ({ idProducto: i.idProducto, cantidad: i.cantidad })),
         cobrarInmediato: cobrarInmediato,
         formaPago: formaPago,
-        idempotencyKey: `SALE_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+        idempotencyKey: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `SALE_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
       };
 
       const btn = $("#saleSubmitBtn");
@@ -3713,7 +4880,8 @@
           categoria,
           precioVenta,
           stockBodegaInicial,
-          stockAnaquelInicial
+          stockAnaquelInicial,
+          idempotencyKey: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `PROD_${Date.now()}`
         }));
         $("#productEditorModal").close();
         notify("Producto guardado correctamente en el catálogo.");
@@ -3772,7 +4940,8 @@
       if (submitBtn) submitBtn.disabled = true;
 
       try {
-        unwrap(await call("apiTransferInventory", { idProducto, direccion, cantidad, motivo }));
+        const idempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `TRF_${Date.now()}`;
+        unwrap(await call("apiTransferInventory", { idProducto, direccion, cantidad, motivo, idempotencyKey }));
         $("#transferStockModal").close();
         notify("Traspaso de inventario realizado con éxito.");
         await loadInventory(true);
@@ -3823,7 +4992,8 @@
       if (submitBtn) submitBtn.disabled = true;
 
       try {
-        unwrap(await call("apiAdjustInventory", { idProducto, ubicacion, nuevoStock, motivo }));
+        const idempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `ADJ_${Date.now()}`;
+        unwrap(await call("apiAdjustInventory", { idProducto, ubicacion, nuevoStock, motivo, idempotencyKey }));
         $("#adjustStockModal").close();
         notify("Corrección de inventario registrada con éxito.");
         await loadInventory(true);
@@ -3904,15 +5074,29 @@
       renderInventory();
     });
 
+    $("#invStockFilterPills")?.addEventListener("click", (e) => {
+      const pill = e.target.closest("[data-stock-filter]");
+      if (!pill) return;
+      state.inventoryStockFilter = pill.dataset.stockFilter;
+      $$(".inv-pill").forEach((p) => p.classList.toggle("active", p === pill));
+      renderInventory();
+    });
+
     $("#inventoryTableBody")?.addEventListener("click", (e) => {
-      const editBtn = e.target.closest("[data-inv-edit]");
-      if (editBtn) return openProductEditor(editBtn.dataset.invEdit);
+      const row = e.target.closest(".inv-row-clickable");
+      if (row && row.dataset.productId) {
+        openProductSheet(row.dataset.productId);
+      }
+    });
 
-      const transferBtn = e.target.closest("[data-inv-transfer]");
-      if (transferBtn) return openTransferModal(transferBtn.dataset.invTransfer);
-
-      const adjustBtn = e.target.closest("[data-inv-adjust]");
-      if (adjustBtn) return openAdjustModal(adjustBtn.dataset.invAdjust);
+    $("#inventoryTableBody")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        const row = e.target.closest(".inv-row-clickable");
+        if (row && row.dataset.productId) {
+          e.preventDefault();
+          openProductSheet(row.dataset.productId);
+        }
+      }
     });
 
     $("#saleCategoryChips")?.addEventListener("click", (e) => {
@@ -4003,7 +5187,23 @@
       loadingModalEl.addEventListener("cancel", (e) => e.preventDefault());
     }
 
+    $("#sheetCloseBtn")?.addEventListener("click", closeSheet);
+    $("#sheet")?.addEventListener("click", (e) => {
+      if (e.target === $("#sheet")) closeSheet();
+    });
+
     setInterval(refreshRoomClocks, 1000);
+
+    // Refresco silencioso cada 30s en segundo plano si no hay modales abiertos (T-32)
+    setInterval(() => {
+      if (document.visibilityState === "visible") {
+        const anyModalOpen = Array.from(document.querySelectorAll("dialog")).some((d) => d.open);
+        if (!anyModalOpen && state.view === "roomsView") {
+          loadOperational(true);
+        }
+      }
+    }, 30000);
+
     loadAll();
   </script>
 </body>

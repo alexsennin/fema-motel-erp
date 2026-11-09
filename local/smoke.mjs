@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { runInNewContext, Script } from "node:vm";
-import { localUserEmail, secondLocalUserEmail } from "./seed-data.mjs";
+import { localUserEmail, secondLocalUserEmail, noPermUserEmail } from "./seed-data.mjs";
 import { runConcurrentRpc } from "./concurrency.mjs";
 import {
   createClock,
@@ -48,6 +48,7 @@ const silentLogger = { log() {}, warn() {}, error() {} };
 const identities = new Map([
   [localUserEmail, createLocalRuntime({ store, identity: localUserEmail, clock, scriptLockBuffer, logger: silentLogger })],
   [secondLocalUserEmail, createLocalRuntime({ store, identity: secondLocalUserEmail, clock, scriptLockBuffer, logger: silentLogger })],
+  [noPermUserEmail, createLocalRuntime({ store, identity: noPermUserEmail, clock, scriptLockBuffer, logger: silentLogger })],
 ]);
 for (const context of identities.values()) runInNewContext(compiledSource, context, { filename: "FEMA-Code.js" });
 
@@ -246,6 +247,8 @@ assert.equal(walkingStay.MarcaModeloVehiculo, "CAMINANDO");
 assert.equal(walkingStay.Placas, "No aplica");
 
 // Prueba de Inventario y Ventas a Habitación
+const repairResult = rpc("apiAdminRepairInventory");
+assert.equal(repairResult.productos, 68, "la reparación administrativa siembra los 68 productos del menú");
 const products = rpc("apiGetProductsAndInventory");
 assert.ok(products.length >= 68, "el catálogo auto-siembra los 68 productos del menú");
 const beerProd = products.find((p) => p.nombre.includes("CORONA LIGHT"));
@@ -278,9 +281,36 @@ const saleResult = rpc("apiRegisterRoomSale", [{
 assert.equal(saleResult.total, 76, "el total de 2 cervezas a $38 es $76");
 assert.equal(saleResult.itemsVendidos, 2);
 
+// Reintento / doble clic con misma clave no duplica descuento ni cargos
+const duplicateSaleResult = rpc("apiRegisterRoomSale", [{
+  idHabitacion: "HAB-LOCAL-1",
+  items: [{ idProducto: beerProd.idProducto, cantidad: 2 }],
+  cobrarInmediato: false,
+  idempotencyKey: "LOCAL-SALE-TEST-1"
+}]);
+assert.equal(duplicateSaleResult.total, 76);
+assert.equal(duplicateSaleResult.itemsVendidos, 2);
+
+// Verificación de cabecera en Ventas y suma de Cargos (T-16)
+const salesRows = store.inspect("Ventas");
+assert.equal(salesRows.length, 1, "se registra la cabecera en Ventas");
+assert.equal(Number(salesRows[0].Total), 76);
+assert.equal(salesRows[0].Estado, "A_CUENTA");
+const chargeRows = store.inspect("Cargos").filter((c) => c.IdVenta === salesRows[0].IdVenta);
+const sumCharges = chargeRows.reduce((sum, c) => sum + Number(c.Total), 0);
+assert.equal(sumCharges, Number(salesRows[0].Total), "la suma de Cargos.Total por IdVenta coincide con Ventas.Total");
+
+// Verificación de cuenta de estancia (T-18)
+const account = rpc("apiGetStayAccount", ["HAB-LOCAL-1"]);
+assert.equal(account.numeroHabitacion, "N-TEST-01");
+assert.equal(account.totalRenta, 500);
+assert.equal(account.totalConsumos, 76);
+assert.equal(account.totalPagos, 500);
+assert.equal(account.saldo, 76, "el saldo refleja la renta y los consumos a cuenta pendientes de pago");
+
 const productsAfterSale = rpc("apiGetProductsAndInventory");
 const beerAfterSale = productsAfterSale.find((p) => p.idProducto === beerProd.idProducto);
-assert.equal(beerAfterSale.stockAnaquel, beerAfterTransfer.stockAnaquel - 2, "el stock de anaquel se descuenta tras la venta");
+assert.equal(beerAfterSale.stockAnaquel, beerAfterTransfer.stockAnaquel - 2, "el stock de anaquel se descuenta sólo una vez a pesar del reintento");
 
 // Corrección de inventario (Ajuste)
 rpc("apiAdjustInventory", [{
@@ -300,6 +330,21 @@ rpc("apiSaveProduct", [{
   categoria: beerProd.categoria,
   precioVenta: 42
 }]);
+// Verificación de permiso en inventario (T-01)
+const deniedSave = identities.get(noPermUserEmail).apiSaveProduct({ nombre: "Test", categoria: "TEST", precioVenta: 10 });
+assert.equal(deniedSave.ok, false);
+assert.match(deniedSave.error.message, /PER-INV-GEST/);
+
+// Prueba de idempotencia con runIdempotent_ (T-13)
+let idempotencyCounter = 0;
+const testIdemFn = () => { idempotencyCounter++; return { valor: idempotencyCounter }; };
+const testUser = identities.get(localUserEmail).getCurrentUser_();
+const idemRes1 = identities.get(localUserEmail).runIdempotent_(testUser, "TEST-IDEMPOTENCY-KEY-1", "PRUEBA", testIdemFn);
+const idemRes2 = identities.get(localUserEmail).runIdempotent_(testUser, "TEST-IDEMPOTENCY-KEY-1", "PRUEBA", testIdemFn);
+assert.equal(idempotencyCounter, 1, "la función protegida por runIdempotent_ se ejecuta sólo una vez");
+assert.equal(idemRes1.valor, 1);
+assert.equal(idemRes2.valor, 1, "la segunda llamada devuelve el resultado confirmado sin re-ejecutar");
+
 const productsAfterPrice = rpc("apiGetProductsAndInventory");
 const beerAfterPrice = productsAfterPrice.find((p) => p.idProducto === beerProd.idProducto);
 assert.equal(beerAfterPrice.precioVenta, 42, "el precio se actualizó a $42");
@@ -310,6 +355,26 @@ assert.ok(movements.length >= 3, "los movimientos quedan registrados en auditor�
 assert.ok(movements.some((m) => m.tipoMovimiento === "VENTA" && m.destino.startsWith("HABITACION")));
 assert.ok(movements.some((m) => m.tipoMovimiento === "TRASPASO_A_ANAQUEL"));
 assert.ok(movements.some((m) => m.tipoMovimiento === "AJUSTE"));
+
+// Prueba de Salida con cobro de saldo (T-19)
+const blockedExit = identities.get(localUserEmail).apiRegisterExit({
+  idHabitacion: "HAB-LOCAL-1",
+  observaciones: "Intento de salida sin pagar saldo",
+  idempotencyKey: "LOCAL-EXIT-UNPAID-FAIL"
+});
+assert.equal(blockedExit.ok, false);
+assert.match(blockedExit.error.message, /saldo pendiente de \$76\.00/);
+
+const paidExit = rpc("apiRegisterExit", [{
+  idHabitacion: "HAB-LOCAL-1",
+  observaciones: "Salida con liquidación",
+  idempotencyKey: "LOCAL-EXIT-PAID-SUCCESS",
+  cobro: { formaPago: "EFECTIVO", monto: 76 }
+}]);
+assert.equal(paidExit.estadoHabitacion, "SUCIA");
+const accountAfterExit = rpc("apiGetStayAccount", ["HAB-LOCAL-1"]);
+assert.equal(accountAfterExit.saldo, 0, "el saldo queda en 0 tras liquidar en la salida");
+assert.equal(accountAfterExit.totalPagos, 576);
 
 const secondHotelEntryInput = {
   idHabitacion: "HAB-LOCAL-2", idTarifa: "TARIFA-LOCAL-2", medioLlegada: "VEHICULO", marcaModeloVehiculo: "Recuperación", placas: "TEST-02",

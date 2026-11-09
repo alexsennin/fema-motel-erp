@@ -60,7 +60,11 @@ export function createLocalStore({
   function writeRange(name, row, column, values) {
     if (failureState?.next) {
       const failure = failureState.next;
-      const matches = failure.sheet === name && failure.row === row && failure.column === column;
+      const numRows = Array.isArray(values) ? values.length : 1;
+      const numCols = Array.isArray(values) && Array.isArray(values[0]) ? values[0].length : 1;
+      const matches = failure.sheet === name &&
+        failure.row >= row && failure.row < row + numRows &&
+        failure.column >= column && failure.column < column + numCols;
       if (matches) {
         failureState.next = null;
         throw new Error(`FEMA_LOCAL_INJECTED_WRITE_FAILURE: ${name}!R${row}C${column}`);

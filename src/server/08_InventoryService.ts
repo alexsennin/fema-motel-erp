@@ -131,24 +131,59 @@ function healProductsSheet_(motelId: string): void {
   }
 }
 
+const DEFAULT_PRODUCT_CATEGORIES = [
+  { nombre: "SEX-SHOP", orden: 1 },
+  { nombre: "FARMACIA", orden: 2 },
+  { nombre: "ALIMENTOS", orden: 3 },
+  { nombre: "DULCERÍA", orden: 4 },
+  { nombre: "CIGARROS", orden: 5 },
+  { nombre: "BOTANA", orden: 6 },
+  { nombre: "CERVEZA", orden: 7 },
+  { nombre: "BEBIDAS", orden: 8 },
+  { nombre: "VINOS", orden: 9 }
+];
+
+function seedCategoriesIfEmpty_(motelId: string): Map<string, SheetRow> {
+  const existing = readRows_(FEMA_CONFIG.sheets.productCategories)
+    .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === motelId && isRowActive_(row.Activo));
+  const categoryMap = new Map<string, SheetRow>();
+  existing.forEach((cat) => categoryMap.set(String(cat.Nombre).trim().toUpperCase(), cat));
+
+  if (existing.length === 0) {
+    DEFAULT_PRODUCT_CATEGORIES.forEach((item) => {
+      const catId = newId_("CAT");
+      const record = {
+        IdCategoria: catId,
+        IdMotel: motelId,
+        Nombre: item.nombre,
+        Orden: item.orden,
+        Activo: true
+      };
+      appendRow_(FEMA_CONFIG.sheets.productCategories, record);
+      categoryMap.set(item.nombre, record);
+    });
+  }
+  return categoryMap;
+}
+
 function seedMenuIfEmpty_(motelId: string, user: FemaUser): void {
   healProductsSheet_(motelId);
+  const catMap = seedCategoriesIfEmpty_(motelId);
 
   const existing = readRows_(FEMA_CONFIG.sheets.products)
     .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === motelId && isRowActive_(row.Activo));
   if (existing.length > 0) return;
 
-  const now = now_().toISOString();
+  const now = now_();
   DEFAULT_MENU_ITEMS.forEach((item) => {
     const prodId = newId_("PRD");
+    const cat = catMap.get(item.categoria);
     appendRow_(FEMA_CONFIG.sheets.products, {
       IdProducto: prodId,
       IdMotel: motelId,
       Categoria: item.categoria,
-      Categoría: item.categoria,
+      IdCategoria: cat ? String(cat.IdCategoria) : "",
       Nombre: item.nombre,
-      Producto: item.nombre,
-      NombreProducto: item.nombre,
       PrecioVenta: item.precioVenta,
       CostoUnitario: 0,
       Activo: true,
@@ -165,9 +200,24 @@ function seedMenuIfEmpty_(motelId: string, user: FemaUser): void {
   });
 }
 
+function adminRepairInventory_(user: FemaUser): { productos: number } {
+  assertPermission_(user, "PER-CAT-GEST");
+  return withScriptLock_(() => {
+    healProductsSheet_(user.idMotel);
+    seedMenuIfEmpty_(user.idMotel, user);
+    const count = readRows_(FEMA_CONFIG.sheets.products)
+      .filter((r) => !isExampleRow_(r) && String(r.IdMotel) === user.idMotel && isRowActive_(r.Activo)).length;
+    return { productos: count };
+  });
+}
+
 function getProductsAndInventory_(user: FemaUser): ProductInventoryItem[] {
-  seedMenuIfEmpty_(user.idMotel, user);
-  healProductsSheet_(user.idMotel);
+  assertPermission_(user, "PER-HAB-GEST");
+
+  const catOrderMap = new Map<string, number>();
+  readRows_(FEMA_CONFIG.sheets.productCategories)
+    .filter((r) => !isExampleRow_(r) && String(r.IdMotel) === user.idMotel)
+    .forEach((r) => catOrderMap.set(String(r.Nombre).trim().toUpperCase(), Number(r.Orden) || 99));
 
   const products = readRows_(FEMA_CONFIG.sheets.products)
     .filter((row) => !isExampleRow_(row) && String(row.IdMotel) === user.idMotel && isRowActive_(row.Activo));
@@ -208,12 +258,19 @@ function getProductsAndInventory_(user: FemaUser): ProductInventoryItem[] {
       activo: isRowActive_(prod.Activo),
       stockBodega,
       stockAnaquel,
-      stockTotal: stockBodega + stockAnaquel
+      stockTotal: stockBodega + stockAnaquel,
+      stockMinimo: Number(prod.StockMinimo || 3) || 3
     };
-  }).sort((a, b) => a.categoria.localeCompare(b.categoria) || a.nombre.localeCompare(b.nombre));
+  }).sort((a, b) => {
+    const orderA = catOrderMap.get(a.categoria) ?? 99;
+    const orderB = catOrderMap.get(b.categoria) ?? 99;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.nombre.localeCompare(b.nombre);
+  });
 }
 
 function getOccupiedRoomsForSale_(user: FemaUser): OccupiedRoomOption[] {
+  assertPermission_(user, "PER-HAB-GEST");
   const rooms = readRows_(FEMA_CONFIG.sheets.rooms)
     .filter((r) => !isExampleRow_(r) && String(r.IdMotel) === user.idMotel && isRowActive_(r.Activo) && String(r.EstadoActual) === "OCUPADA" && r.IdCicloActual);
 
@@ -243,6 +300,7 @@ function getOccupiedRoomsForSale_(user: FemaUser): OccupiedRoomOption[] {
 }
 
 function saveProduct_(user: FemaUser, input: SaveProductInput): { id: string } {
+  assertPermission_(user, "PER-INV-GEST");
   const nombre = String(input.nombre || "").trim();
   const categoria = String(input.categoria || "").trim().toUpperCase();
   const precioVenta = Number(input.precioVenta);
@@ -252,8 +310,9 @@ function saveProduct_(user: FemaUser, input: SaveProductInput): { id: string } {
   if (!categoria) throw new Error("La categoría del producto es obligatoria.");
   if (isNaN(precioVenta) || precioVenta < 0) throw new Error("El precio de venta debe ser mayor o igual a 0.");
 
-  return withScriptLock_(() => {
-    const now = now_().toISOString();
+  const opKey = input.idempotencyKey ? String(input.idempotencyKey).trim() : newId_("OP-PROD");
+  return runIdempotent_(user, opKey, "GUARDAR_PRODUCTO", () => {
+    const now = now_();
     if (input.idProducto) {
       const prod = requireRowById_(FEMA_CONFIG.sheets.products, "IdProducto", input.idProducto);
       updateRowById_(FEMA_CONFIG.sheets.products, "IdProducto", input.idProducto, {
@@ -275,10 +334,7 @@ function saveProduct_(user: FemaUser, input: SaveProductInput): { id: string } {
       IdProducto: newProdId,
       IdMotel: user.idMotel,
       Categoria: categoria,
-      Categoría: categoria,
       Nombre: nombre,
-      Producto: nombre,
-      NombreProducto: nombre,
       PrecioVenta: precioVenta,
       CostoUnitario: costoUnitario,
       Activo: true,
@@ -325,10 +381,12 @@ function saveProduct_(user: FemaUser, input: SaveProductInput): { id: string } {
 }
 
 function transferInventory_(user: FemaUser, input: TransferInventoryInput): void {
+  assertPermission_(user, "PER-INV-GEST");
   const qty = Number(input.cantidad);
   if (isNaN(qty) || qty <= 0) throw new Error("La cantidad a traspasar debe ser mayor a 0.");
 
-  return withScriptLock_(() => {
+  const opKey = input.idempotencyKey ? String(input.idempotencyKey).trim() : newId_("OP-TRF");
+  runIdempotent_(user, opKey, "TRASPASO_INVENTARIO", () => {
     const invRow = readRows_(FEMA_CONFIG.sheets.inventory)
       .find((r) => !isExampleRow_(r) && String(r.IdMotel) === user.idMotel && String(r.IdProducto) === input.idProducto);
     if (!invRow) throw new Error("Registro de inventario no encontrado.");
@@ -361,7 +419,7 @@ function transferInventory_(user: FemaUser, input: TransferInventoryInput): void
       throw new Error("Dirección de traspaso no válida.");
     }
 
-    const now = now_().toISOString();
+    const now = now_();
     updateRowById_(FEMA_CONFIG.sheets.inventory, "IdInventario", String(invRow.IdInventario), {
       StockBodega: newBodega,
       StockAnaquel: newAnaquel,
@@ -395,12 +453,14 @@ function transferInventory_(user: FemaUser, input: TransferInventoryInput): void
 }
 
 function adjustInventory_(user: FemaUser, input: AdjustInventoryInput): void {
+  assertPermission_(user, "PER-INV-GEST");
   const nuevoStock = Number(input.nuevoStock);
   const motivo = String(input.motivo || "").trim();
   if (isNaN(nuevoStock) || nuevoStock < 0) throw new Error("El nuevo stock no puede ser negativo.");
   if (!motivo) throw new Error("El motivo de la corrección o ajuste es obligatorio.");
 
-  return withScriptLock_(() => {
+  const opKey = input.idempotencyKey ? String(input.idempotencyKey).trim() : newId_("OP-ADJ");
+  runIdempotent_(user, opKey, "AJUSTE_INVENTARIO", () => {
     const invRow = readRows_(FEMA_CONFIG.sheets.inventory)
       .find((r) => !isExampleRow_(r) && String(r.IdMotel) === user.idMotel && String(r.IdProducto) === input.idProducto);
     if (!invRow) throw new Error("Registro de inventario no encontrado.");
@@ -422,7 +482,7 @@ function adjustInventory_(user: FemaUser, input: AdjustInventoryInput): void {
       throw new Error("Ubicación no válida para ajuste (debe ser BODEGA o ANAQUEL).");
     }
 
-    const now = now_().toISOString();
+    const now = now_();
     updateRowById_(FEMA_CONFIG.sheets.inventory, "IdInventario", String(invRow.IdInventario), {
       StockBodega: newBodega,
       StockAnaquel: newAnaquel,
@@ -456,9 +516,11 @@ function adjustInventory_(user: FemaUser, input: AdjustInventoryInput): void {
 }
 
 function registerSaleToRoom_(user: FemaUser, input: RegisterSaleInput): RegisterSaleResult {
+  assertPermission_(user, "PER-VTA-REG");
   if (!input.items || !input.items.length) throw new Error("Debe agregar al menos un producto a la venta.");
 
-  return withScriptLock_(() => {
+  const opKey = input.idempotencyKey ? String(input.idempotencyKey).trim() : newId_("OP-VTA");
+  return runIdempotent_(user, opKey, "VENTA_PRODUCTOS", () => {
     const shift = requireOpenShiftForUser_(user);
     const shiftId = String(shift.IdTurno);
 
@@ -510,10 +572,11 @@ function registerSaleToRoom_(user: FemaUser, input: RegisterSaleInput): Register
       verifiedItems.push({ prod, inv, qty, subtotal });
     });
 
-    const now = now_().toISOString();
-    const cargoId = newId_("CRG");
+    const now = now_();
+    const ventaId = newId_("VTA");
+    let pagoId = "";
 
-    // 2. Descontar de anaquel y registrar movimientos
+    // 2. Descontar de anaquel y registrar movimientos y cargos
     verifiedItems.forEach(({ prod, inv, qty, subtotal }) => {
       const pId = String(prod.IdProducto);
       const curBodega = Number(inv.StockBodega || 0);
@@ -553,14 +616,18 @@ function registerSaleToRoom_(user: FemaUser, input: RegisterSaleInput): Register
         Total: subtotal,
         FechaHora: now,
         IdUsuario: user.idUsuario,
-        Estado: input.cobrarInmediato ? "COBRADO" : "PENDIENTE"
+        Estado: input.cobrarInmediato ? "COBRADO" : "PENDIENTE",
+        IdMotel: user.idMotel,
+        IdVenta: ventaId,
+        IdProducto: pId
       });
     });
 
     // 3. Si se cobra de inmediato, registrar el pago en Pagos
     if (input.cobrarInmediato) {
+      pagoId = newId_("PAG");
       appendRow_(FEMA_CONFIG.sheets.payments, {
-        IdPago: newId_("PAG"),
+        IdPago: pagoId,
         IdEstancia: stayId,
         IdTurno: shiftId,
         FechaHora: now,
@@ -568,11 +635,28 @@ function registerSaleToRoom_(user: FemaUser, input: RegisterSaleInput): Register
         Monto: totalSale,
         Referencia: `VENTA_PRODUCTOS_HAB_${room.NumeroHabitacion}`,
         IdUsuario: user.idUsuario,
-        Estado: "APLICADO"
+        Estado: "APLICADO",
+        IdMotel: user.idMotel,
+        Concepto: "CONSUMO"
       });
     }
 
-    writeAudit_(user, "VENTA_PRODUCTOS", "CARGO", cargoId, null, {
+    // 4. Registrar la cabecera en Ventas
+    appendRow_(FEMA_CONFIG.sheets.sales, {
+      IdVenta: ventaId,
+      IdMotel: user.idMotel,
+      IdEstancia: stayId,
+      IdTurno: shiftId,
+      Total: totalSale,
+      Items: totalItems,
+      Estado: input.cobrarInmediato ? "PAGADA" : "A_CUENTA",
+      IdPago: pagoId,
+      IdUsuario: user.idUsuario,
+      FechaHora: now
+    });
+
+    writeAudit_(user, "VENTA_PRODUCTOS", "VENTA", ventaId, null, {
+      IdVenta: ventaId,
       IdHabitacion: input.idHabitacion,
       NumeroHabitacion: room.NumeroHabitacion,
       IdEstancia: stayId,
@@ -583,7 +667,8 @@ function registerSaleToRoom_(user: FemaUser, input: RegisterSaleInput): Register
     }, `Venta de productos a habitación ${room.NumeroHabitacion}`, "INVENTARIO");
 
     return {
-      idCargo: cargoId,
+      idCargo: ventaId,
+      idVenta: ventaId,
       total: totalSale,
       habitacion: String(room.NumeroHabitacion),
       itemsVendidos: totalItems
@@ -592,6 +677,7 @@ function registerSaleToRoom_(user: FemaUser, input: RegisterSaleInput): Register
 }
 
 function getInventoryMovements_(user: FemaUser): InventoryMovementRecord[] {
+  assertPermission_(user, "PER-HAB-GEST");
   const products = readRows_(FEMA_CONFIG.sheets.products)
     .filter((r) => !isExampleRow_(r) && String(r.IdMotel) === user.idMotel);
   const productMap = new Map(products.map((p) => [String(p.IdProducto), p]));
@@ -617,7 +703,7 @@ function getInventoryMovements_(user: FemaUser): InventoryMovementRecord[] {
       idTurno: String(m.IdTurno || ""),
       idEstancia: String(m.IdEstancia || ""),
       idUsuario: String(m.IdUsuario || ""),
-      fechaHora: String(m.FechaHora || "")
+      fechaHora: formatIso_(m.FechaHora)
     };
   }).reverse().slice(0, 100);
 }

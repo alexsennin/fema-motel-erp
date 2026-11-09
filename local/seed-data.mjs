@@ -1,5 +1,6 @@
 export const localUserEmail = "dev@example.test";
 export const secondLocalUserEmail = "recepcion-b@example.test";
+export const noPermUserEmail = "sin-permiso@example.test";
 
 export const localSeed = {
   Moteles: [
@@ -9,15 +10,23 @@ export const localSeed = {
   Usuarios: [
     { IdUsuario: "USR-LOCAL-1", IdMotel: "MOTEL-LOCAL-1", Correo: localUserEmail, Nombre: "Recepción", Apellidos: "Norte", IdRol: "ROL-LOCAL-RECEPCION", Activo: true, CreadoEn: "" },
     { IdUsuario: "USR-LOCAL-2", IdMotel: "MOTEL-LOCAL-2", Correo: secondLocalUserEmail, Nombre: "Recepción", Apellidos: "Sur", IdRol: "ROL-LOCAL-RECEPCION", Activo: true, CreadoEn: "" },
+    { IdUsuario: "USR-LOCAL-SIN-PERM", IdMotel: "MOTEL-LOCAL-1", Correo: noPermUserEmail, Nombre: "Sin", Apellidos: "Permiso", IdRol: "ROL-LOCAL-SIN-PERM", Activo: true, CreadoEn: "" },
   ],
-  Roles: [{ IdRol: "ROL-LOCAL-RECEPCION", NombreRol: "Recepción local", Descripcion: "Perfil compartido por fixtures de dos hoteles", Activo: true }],
+  Roles: [
+    { IdRol: "ROL-LOCAL-RECEPCION", NombreRol: "Recepción local", Descripcion: "Perfil compartido por fixtures de dos hoteles", Activo: true },
+    { IdRol: "ROL-LOCAL-SIN-PERM", NombreRol: "Sin permisos inventario", Descripcion: "Perfil sin permisos de inventario", Activo: true },
+  ],
   Permisos: [
     { IdPermiso: "PER-HAB-GEST", Modulo: "HABITACIONES", Accion: "GESTIONAR", Descripcion: "Fixture local" },
     { IdPermiso: "PER-CAT-GEST", Modulo: "CATALOGOS", Accion: "GESTIONAR", Descripcion: "Fixture local" },
+    { IdPermiso: "PER-INV-GEST", Modulo: "INVENTARIO", Accion: "GESTIONAR", Descripcion: "Fixture local" },
+    { IdPermiso: "PER-VTA-REG", Modulo: "VENTAS", Accion: "REGISTRAR", Descripcion: "Fixture local" },
   ],
   RolPermisos: [
     { IdRolPermiso: "RP-LOCAL-1", IdRol: "ROL-LOCAL-RECEPCION", IdPermiso: "PER-HAB-GEST", Permitido: true },
     { IdRolPermiso: "RP-LOCAL-2", IdRol: "ROL-LOCAL-RECEPCION", IdPermiso: "PER-CAT-GEST", Permitido: true },
+    { IdRolPermiso: "RP-LOCAL-3", IdRol: "ROL-LOCAL-RECEPCION", IdPermiso: "PER-INV-GEST", Permitido: true },
+    { IdRolPermiso: "RP-LOCAL-4", IdRol: "ROL-LOCAL-RECEPCION", IdPermiso: "PER-VTA-REG", Permitido: true },
   ],
   PersonalLimpieza: [
     { IdPersonalLimpieza: "LIM-LOCAL-1", IdMotel: "MOTEL-LOCAL-1", Nombre: "Limpieza", Apellidos: "Norte", TurnoHabitual: "MATUTINO", Activo: true, CreadoEn: "" },
@@ -53,6 +62,9 @@ export const localSeed = {
   Productos: [],
   Inventario: [],
   MovimientosInventario: [],
+  Operaciones: [],
+  Ventas: [],
+  CategoriasProducto: [],
 };
 
 export const sheetHeaders = {
@@ -73,11 +85,14 @@ export const sheetHeaders = {
   MovimientosEstancia: ["IdMovimientoEstancia", "IdEstancia", "TipoMovimiento", "FechaHora", "IdHabitacionOrigen", "IdHabitacionDestino", "MinutosAgregados", "MontoAjuste", "Comentario", "IdUsuario"],
   Limpiezas: ["IdLimpieza", "IdCiclo", "IdHabitacion", "IdPersonalLimpieza", "FechaHoraAsignacion", "FechaHoraInicio", "FechaHoraFin", "MinutosLimpieza", "Puntos", "Estado", "IdUsuarioAsigna", "IdUsuarioFinaliza"],
   Mantenimientos: ["IdMantenimiento", "IdCiclo", "IdHabitacion", "FechaHoraReporte", "Motivo", "Prioridad", "Estado", "Responsable", "FechaHoraFin", "Resolucion", "IdUsuario"],
-  Cargos: ["IdCargo", "IdEstancia", "IdTurno", "TipoCargo", "Descripcion", "Cantidad", "PrecioUnitario", "Total", "FechaHora", "IdUsuario", "Estado"],
-  Pagos: ["IdPago", "IdEstancia", "IdTurno", "FechaHora", "FormaPago", "Monto", "Referencia", "IdUsuario", "Estado"],
+  Cargos: ["IdCargo", "IdEstancia", "IdTurno", "TipoCargo", "Descripcion", "Cantidad", "PrecioUnitario", "Total", "FechaHora", "IdUsuario", "Estado", "IdMotel", "IdVenta", "IdProducto"],
+  Pagos: ["IdPago", "IdEstancia", "IdTurno", "FechaHora", "FormaPago", "Monto", "Referencia", "IdUsuario", "Estado", "IdMotel", "Concepto"],
   Bitacora: ["IdBitacora", "IdMotel", "FechaHora", "IdUsuario", "Modulo", "Accion", "Entidad", "IdEntidad", "DatosAntesJSON", "DatosDespuesJSON", "Motivo", "IdSesion"],
   Sesiones: ["IdSesion", "IdUsuario", "FechaHoraInicio", "FechaHoraUltimaActividad", "FechaHoraFin", "Activa", "UserAgent"],
   Productos: ["IdProducto", "IdMotel", "Categoria", "Nombre", "PrecioVenta", "CostoUnitario", "Activo", "CreadoEn"],
   Inventario: ["IdInventario", "IdMotel", "IdProducto", "StockBodega", "StockAnaquel", "ActualizadoEn"],
   MovimientosInventario: ["IdMovimiento", "IdMotel", "IdProducto", "TipoMovimiento", "Origen", "Destino", "Cantidad", "StockBodegaDespues", "StockAnaquelDespues", "Motivo", "IdTurno", "IdEstancia", "IdUsuario", "FechaHora"],
+  Operaciones: ["IdOperacion", "IdMotel", "Tipo", "Estado", "ResultadoJSON", "IdUsuario", "FechaHora"],
+  Ventas: ["IdVenta", "IdMotel", "IdEstancia", "IdTurno", "Total", "Items", "Estado", "IdPago", "IdUsuario", "FechaHora"],
+  CategoriasProducto: ["IdCategoria", "IdMotel", "Nombre", "Orden", "Activo"],
 };
